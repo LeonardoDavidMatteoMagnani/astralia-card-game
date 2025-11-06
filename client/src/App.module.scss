@@ -30,9 +30,11 @@
     margin: 1rem;
     font-size: 1.1rem;
     font-family: var(--font-primary);
+    font-weight: bold;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #f1f9e8;
     background: #242424;
-    color: #fff;
     border: none;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.3s ease, background-position 0.5s ease;
@@ -48,7 +50,13 @@
     }
 
     &.playButton {
+      color: #fff;
       background: linear-gradient(45deg, #e676ad, #7b72f1);
+    }
+
+    &.decksButton {
+      color: #242424;
+      background: #f1f9e8;
     }
   }
 }

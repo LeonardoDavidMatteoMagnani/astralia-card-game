@@ -1,0 +1,28 @@
+.card {
+  width: 200px;
+  height: 280px;
+  background-color: #242424;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--font-primary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 10px rgba(123, 114, 241, 0.3);
+  }
+}
+
+.addCard {
+  background-color: #1e1e1e;
+  border: 2px dashed #555;
+  font-size: 2rem;
+  font-weight: bold;
+}

@@ -1,7 +1,10 @@
+import { useNavigate } from "react-router-dom";
 import astraliaLogo from "./assets/logo_astralia_chronicles.png";
 import styles from "./App.module.scss";
 
 function App() {
+  const navigate = useNavigate();
+
   return (
     <div className={styles.pageRoot}>
       <a href="https://www.astraliachronicles.com/" target="_blank">
@@ -10,7 +13,12 @@ function App() {
       <div className={styles.menuLayout}>
         <button className={styles.playButton}>join game</button>
         <button className={styles.playButton}>host game</button>
-        <button>my decks</button>
+        <button
+          className={styles.decksButton}
+          onClick={() => navigate("/my-decks")}
+        >
+          my decks
+        </button>
         <button
           onClick={() =>
             window.open("https://www.astraliachronicles.com/cards", "_blank")
