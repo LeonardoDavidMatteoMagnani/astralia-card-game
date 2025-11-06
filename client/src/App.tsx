@@ -1,35 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import astraliaLogo from "./assets/logo_astralia_chronicles.png";
+import styles from "./App.module.scss";
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div className={styles.pageRoot}>
+      <a href="https://www.astraliachronicles.com/" target="_blank">
+        <img src={astraliaLogo} className={styles.logo} alt="Astralia logo" />
+      </a>
+      <div className={styles.menuLayout}>
+        <button className={styles.playButton}>join game</button>
+        <button className={styles.playButton}>host game</button>
+        <button>my decks</button>
+        <button
+          onClick={() =>
+            window.open("https://www.astraliachronicles.com/cards", "_blank")
+          }
+        >
+          cards
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        <button
+          onClick={() =>
+            window.open(
+              "https://drive.google.com/file/d/1m4AbGJR_e4ywfj-e-fKoaJ01asj_D9Cp/view",
+              "_blank"
+            )
+          }
+        >
+          rules
+        </button>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
