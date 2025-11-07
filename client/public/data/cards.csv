@@ -1,0 +1,20 @@
+id,setId,name,faction,mainDeck,cost,type,subtype,sets,atk,hp,keywords,flip,face,singularity,imageId
+dcs_02_001ex,DCS-02-001 EX,"Ivo, Head of the Secret Police",Red,Protagonist,6,Protagonist,Supporter,Dawn of the Celestial Shadow,0,18,"frazzle, blood tithe",FALSE,1,TRUE,dcs_02_001_ex
+dcs_02_002ex,DCS-02-002 EX,"Lucrezia, Progenitor of Vampires",Red,Protagonist,8,Protagonist,Vampire,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",0,20,"flip, turn end, add",TRUE,1,TRUE,dcs_02_002_f_ex
+dcs_02_002ex,DCS-02-002 EX,"Lucrezia, Progenitor of Vampires",Red,Protagonist,8,Protagonist,Vampire,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",3,20,"alter ego, breakthrough, enter, deal, heal",TRUE,2,TRUE,dcs_02_002_r_ex
+dcs_02_003ex,DCS-02-003 EX,Burning Blood,Red,Persona,0,Action,Blood Tithe,Dawn of the Celestial Shadow,,,"blood tithe, deal",FALSE,1,FALSE,dcs_02_003_ex
+dcs_02_004ex,DCS-02-004 EX,Bond of Eternal Subservience,Red,Persona,0,Action,Blood Tithe,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",,,blood tithe,FALSE,1,FALSE,dcs_02_004_ex
+dcs_02_005ex,DCS-02-005 EX,Lesser Hemomancy,Red,Persona,0,Action,Blood Tithe,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",,,"blood tithe, preemptive strike, heal",FALSE,1,FALSE,dcs_02_005_ex
+dcs_02_006ex,DCS-02-006 EX,Ritual of Rebirth,Red,Persona,0,Action,Blood Tithe,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",,,blood tithe,FALSE,1,FALSE,dcs_02_006_ex
+dcs_02_007ex,DCS-02-007 EX,Blood Scythe,Red,Persona,0,Action,Blood Tithe,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",,,"blood tithe, breakthrough, buff",FALSE,1,FALSE,dcs_02_007_ex
+dcs_02_008ex,DCS-02-008 EX,Brutal Frenzy,Red,Persona,0,Action,Blood Tithe,Dawn of the Celestial Shadow,,,"blood tithe, assault, explosion",FALSE,1,FALSE,dcs_02_008_ex
+dcs_02_009ex,DCS-02-009 EX,Crimson Cage,Red,Persona,0,Action,Blood Tithe,Dawn of the Celestial Shadow,,,"blood tithe, shield, debuff",FALSE,1,FALSE,dcs_02_009_ex
+dcs_02_010ex,DCS-02-010 EX,Exsanguinate,Red,Persona,0,Action,Blood Tithe,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",,,"blood tithe, heal, deal",FALSE,1,FALSE,dcs_02_010_ex
+sd_02_006ex,SD-02-006 EX,Mark of the Favored,Red,Persona,0,Action,Blood Tithe,Structure Deck: Blood Harvest,,,"blood tithe, buff",FALSE,1,FALSE,sd_02_006_ex
+dcs_02_011ex,DCS-02-011 EX,Pact for Knowledge,Red,Persona,0,Action,Blood Tithe,Dawn of the Celestial Shadow,,,"blood tithe, draw",FALSE,1,FALSE,dcs_02_011_ex
+dcs_02_012n,DCS-02-012 N,Heirs of the Subservient Lineage,Red,Deck,1,Character,Supporter,Dawn of the Celestial Shadow,0,2,"blood tithe, shatter, deal, pay",FALSE,1,FALSE,dcs_02_012_n
+dcs_02_013n,DCS-02-013 N,Crowd Instigator,Red,Deck,1,Character,Supporter,Dawn of the Celestial Shadow,1,1,"frazzle, buff",FALSE,1,FALSE,dcs_02_013_n
+dcs_02_014n,DCS-02-014 N,Naive Suitor,Red,Deck,1,Character,Supporter,Dawn of the Celestial Shadow,1,1,"shatter, buff",FALSE,1,FALSE,dcs_02_014_n
+dcs_02_015n,DCS-02-015 N,Young Vampire,Red,Deck,1,Character,Vampire,"Dawn of the Celestial Shadow, Structure Deck: Blood Harvest",1,1,"preemptive strike, buff",FALSE,1,FALSE,dcs_02_015_n
+dcs_01_013n,DCS-01-013 N,"Keldan, Dauntless Explorer",Green,Deck,1,Character,Adventurer,"Structure Deck: the Hero's Journey, Dawn of the Celestial Shadow",1,1,"enter, quest",FALSE,1,TRUE,dcs_01_013_n
+sd_01_021n,SD-01-021 N,Whirlpool Slash,Green,Deck,5,Action,Action,Structure Deck: the Hero's Journey,,,"deal, quest",FALSE,1,FALSE,sd_01_021_n
