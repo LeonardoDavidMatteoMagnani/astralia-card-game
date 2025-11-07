@@ -11,13 +11,13 @@ export default function MyDecksPage() {
     setDecks([...decks, newDeckName]);
   };
 
-  // If no decks, show one “empty” slot
+  // If no decks, show one “add” slot
   if (decks.length === 0) {
     return (
       <div className={styles.pageRoot}>
         <h1>My Decks</h1>
         <div className={styles.deckSlots}>
-          <DeckCard title="Empty Deck" onClick={addDeck} />
+          <DeckCard isAddButton onClick={addDeck} />
         </div>
       </div>
     );
@@ -30,7 +30,6 @@ export default function MyDecksPage() {
         {decks.map((deck) => (
           <DeckCard key={deck} title={deck} />
         ))}
-        {/* Always include the "+" add slot */}
         <DeckCard isAddButton onClick={addDeck} />
       </div>
     </div>
