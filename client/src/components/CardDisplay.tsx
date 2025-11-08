@@ -51,7 +51,6 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
         alt={currentFace.name}
         className={styles.cardImage}
       />
-      <div className={styles.cardName}>{currentFace.name}</div>
 
       {backFace && enableFlip && (
         <button className={styles.flipButton} onClick={handleFlip}>
