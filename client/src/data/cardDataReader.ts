@@ -30,6 +30,7 @@ export async function readCardData(): Promise<Card[]> {
     flip: r.flip?.toLowerCase() === "true",
     face: Number(r.face),
     singularity: r.singularity?.toLowerCase() === "true",
+    description: r.description || undefined,
     imageId: r.imageId,
   }));
 

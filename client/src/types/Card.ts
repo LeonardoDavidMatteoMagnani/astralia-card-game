@@ -14,5 +14,6 @@ export interface Card {
   flip: boolean;
   face: number;
   singularity: boolean;
+  description?: string;
   imageId: string;
 }
