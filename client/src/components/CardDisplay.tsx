@@ -7,14 +7,12 @@ import styles from "./CardDisplay.module.scss";
 interface CardDisplayProps {
   card: Card;
   onClick?: (card: Card) => void;
-  isSelectable?: boolean;
   enableFlip?: boolean;
 }
 
 const CardDisplay: React.FC<CardDisplayProps> = ({
   card,
   onClick,
-  isSelectable,
   enableFlip = true,
 }) => {
   const [currentFace, setCurrentFace] = useState<Card>(card);
@@ -40,12 +38,7 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   };
 
   return (
-    <div
-      className={`${styles.cardDisplay} ${
-        isSelectable ? styles.selectable : ""
-      }`}
-      onClick={handleClick}
-    >
+    <div className={`${styles.cardDisplay}`} onClick={handleClick}>
       <img
         src={getCardImagePath(currentFace)}
         alt={currentFace.name}
@@ -53,7 +46,13 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
       />
 
       {backFace && enableFlip && (
-        <button className={styles.flipButton} onClick={handleFlip}>
+        <button
+          className={styles.flipButton}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleFlip();
+          }}
+        >
           Flip
         </button>
       )}

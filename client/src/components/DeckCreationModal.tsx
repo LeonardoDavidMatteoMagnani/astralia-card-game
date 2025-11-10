@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { getCardsByField } from "../services/cardDataService";
 import type { Card } from "../types/Card.ts";
 import CardDisplay from "./CardDisplay";
+import CardDetailsModal from "./CardDetailsModal";
 import styles from "./DeckCreationModal.module.scss";
 
 interface DeckCreationModalProps {
@@ -38,6 +39,10 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
     persona: false,
     deck: false,
   });
+
+  const [detailCard, setDetailCard] = useState<Card | null>(null);
+  const openCardDetails = (card: Card) => setDetailCard(card);
+  const closeCardDetails = () => setDetailCard(null);
 
   useEffect(() => {
     if (!selectedFaction) return;
@@ -242,7 +247,10 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
         return <div className={styles.empty}>No protagonist selected</div>;
       return (
         <div className={styles.selectedProtagonist}>
-          <CardDisplay card={protagonistSelection.card} />
+          <CardDisplay
+            card={protagonistSelection.card}
+            onClick={openCardDetails}
+          />
         </div>
       );
     }
@@ -256,7 +264,7 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
       <div className={styles.selectedGrid}>
         {items.map((it) => (
           <div key={it.card.id} className={styles.selectedItem}>
-            <CardDisplay card={it.card} />
+            <CardDisplay card={it.card} onClick={openCardDetails} />
             {section === "deck" && (
               <div className={styles.qtyBadge}>{it.qty}</div>
             )}
@@ -303,11 +311,7 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
 
           return (
             <div key={card.id} className={styles.editRow}>
-              <CardDisplay
-                card={card}
-                isSelectable={false}
-                enableFlip={false}
-              />
+              <CardDisplay card={card} onClick={openCardDetails} />
               <div className={styles.controls}>
                 <button
                   onClick={() => removeCard(section, card)}
@@ -336,6 +340,10 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
         <button className={styles.closeButton} onClick={onClose}>
           ✕
         </button>
+
+        {detailCard && (
+          <CardDetailsModal card={detailCard} onClose={closeCardDetails} />
+        )}
 
         {!selectedFaction ? (
           <>
