@@ -10,22 +10,16 @@
 
 .cardDisplay img {
   width: 160px;
-  border-radius: 6px;
-  border: 1px solid #444;
-}
-
-.cardDisplay:hover {
-  transform: scale(1.05);
 }
 
 .flipButton {
   position: absolute;
   bottom: 8px;
   right: 8px;
-  padding: 4px 8px;
-  font-size: 0.7rem;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid #666;
+  padding: 5px 9px;
+  font-size: 0.8rem;
+  background: var(--background-color-primary);
+  border: none;
   border-radius: 4px;
   color: white;
   cursor: pointer;
@@ -33,5 +27,5 @@
 }
 
 .flipButton:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--background-color-secondary);
 }

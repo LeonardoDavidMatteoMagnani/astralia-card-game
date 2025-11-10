@@ -3,14 +3,19 @@ html, body {
   padding: 0;
 }
 
+button {
+  color: var(--color-text-primary);
+  font-family: var(--font-primary);
+}
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-primary);
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #1c1c1c;
+  color: var(--color-text-primary);
+  background-color: var(--background-color-primary);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -18,4 +23,8 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 
   --font-primary: 'Arbutus Slab', serif;
+  --color-text-primary: #f1f9e8;
+  --background-color-primary: #1c1c1c;
+  --background-color-secondary: #242424;
+  --background-color-tertiary: #0f1113;
 }

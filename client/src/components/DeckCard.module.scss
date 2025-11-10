@@ -1,13 +1,12 @@
 .card {
   width: 200px;
   height: 280px;
-  background-color: #242424;
+  background-color: var(--background-color-secondary);
   border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-family: var(--font-primary);
   font-size: 1.25rem;
   cursor: pointer;
   user-select: none;
@@ -21,7 +20,6 @@
 }
 
 .addCard {
-  background-color: #1e1e1e;
   border: 2px dashed #555;
   font-size: 2rem;
   font-weight: bold;

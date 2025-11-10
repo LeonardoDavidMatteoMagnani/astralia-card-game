@@ -80,7 +80,6 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
     setEditing((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const [deckSearchMode, setDeckSearchMode] = useState<"name" | "id">("name");
   const [deckSearchText, setDeckSearchText] = useState("");
 
   const [selectedCosts, setSelectedCosts] = useState<string[]>([]);
@@ -154,11 +153,9 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
 
     return cards.filter((card) => {
       if (q) {
-        if (deckSearchMode === "name") {
-          if (!card.name.toLowerCase().includes(q)) return false;
-        } else {
-          if (!card.id.toLowerCase().includes(q)) return false;
-        }
+        const nameMatch = card.name.toLowerCase().includes(q);
+        const idMatch = card.id.toLowerCase().includes(q);
+        if (!nameMatch && !idMatch) return false;
       }
 
       if (
@@ -247,10 +244,12 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
         return <div className={styles.empty}>No protagonist selected</div>;
       return (
         <div className={styles.selectedProtagonist}>
-          <CardDisplay
-            card={protagonistSelection.card}
-            onClick={openCardDetails}
-          />
+          <div className={styles.cardWrapper}>
+            <CardDisplay
+              card={protagonistSelection.card}
+              onClick={openCardDetails}
+            />
+          </div>
         </div>
       );
     }
@@ -264,10 +263,27 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
       <div className={styles.selectedGrid}>
         {items.map((it) => (
           <div key={it.card.id} className={styles.selectedItem}>
-            <CardDisplay card={it.card} onClick={openCardDetails} />
-            {section === "deck" && (
-              <div className={styles.qtyBadge}>{it.qty}</div>
-            )}
+            <div
+              className={styles.cardWrapper}
+              onClick={(e) => {
+                // don't open details if the click originated from an interactive child (flip button, etc.)
+                const target = e.target as HTMLElement | null;
+                if (!target) return;
+                if (
+                  target.closest("button") ||
+                  target.closest("a") ||
+                  target.closest("input")
+                )
+                  return;
+                openCardDetails(it.card);
+              }}
+              role="button"
+            >
+              <CardDisplay card={it.card} />
+              {section === "deck" && (
+                <div className={styles.qtyBadge}>{it.qty}</div>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -311,7 +327,9 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
 
           return (
             <div key={card.id} className={styles.editRow}>
-              <CardDisplay card={card} onClick={openCardDetails} />
+              <div className={styles.cardWrapper}>
+                <CardDisplay card={card} onClick={openCardDetails} />
+              </div>
               <div className={styles.controls}>
                 <button
                   onClick={() => removeCard(section, card)}
@@ -438,32 +456,9 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
                   <>
                     <div className={styles.deckFilters}>
                       <div className={styles.searchContainer}>
-                        <div className={styles.searchModeButtons}>
-                          <button
-                            type="button"
-                            className={
-                              deckSearchMode === "name"
-                                ? styles.activeFilter
-                                : ""
-                            }
-                            onClick={() => setDeckSearchMode("name")}
-                          >
-                            Name
-                          </button>
-                          <button
-                            type="button"
-                            className={
-                              deckSearchMode === "id" ? styles.activeFilter : ""
-                            }
-                            onClick={() => setDeckSearchMode("id")}
-                          >
-                            ID
-                          </button>
-                        </div>
-
                         <input
                           className={styles.searchBar}
-                          placeholder={`Search ${deckSearchMode}`}
+                          placeholder="Search name or id"
                           value={deckSearchText}
                           onChange={(e) => setDeckSearchText(e.target.value)}
                         />
