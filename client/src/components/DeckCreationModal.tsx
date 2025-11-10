@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { getCardsByField } from "../services/cardDataService";
 import type { Card } from "../types/Card.ts";
+import type { AugCard } from "../types/AugCard";
 import CardDisplay from "./CardDisplay";
 import CardDetailsModal from "./CardDetailsModal";
+import CardFilters from "./CardFilters";
 import styles from "./DeckCreationModal.module.scss";
 
 interface DeckCreationModalProps {
@@ -21,9 +23,9 @@ interface SelectedCard {
 export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
   const [selectedFaction, setSelectedFaction] = useState<string | null>(null);
 
-  const [protagonistOptions, setProtagonistOptions] = useState<Card[]>([]);
-  const [personaOptions, setPersonaOptions] = useState<Card[]>([]);
-  const [deckOptions, setDeckOptions] = useState<Card[]>([]);
+  const [protagonistOptions, setProtagonistOptions] = useState<AugCard[]>([]);
+  const [personaOptions, setPersonaOptions] = useState<AugCard[]>([]);
+  const [deckOptions, setDeckOptions] = useState<AugCard[]>([]);
 
   const [protagonistSelection, setProtagonistSelection] =
     useState<SelectedCard | null>(null);
@@ -55,13 +57,61 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
       ]);
 
       const low = selectedFaction.toLowerCase();
-      setProtagonistOptions(
-        pros.filter((c) => c.faction.toLowerCase() === low)
-      );
-      setPersonaOptions(
-        personas.filter((c) => c.faction.toLowerCase() === low)
-      );
-      setDeckOptions(deckCards.filter((c) => c.faction.toLowerCase() === low));
+      const mergeList = async (list: Card[]) => {
+        const { getCardFaces } = await import("../services/cardDataService");
+
+        const out: AugCard[] = await Promise.all(
+          list
+            .filter((c) => c.faction.toLowerCase() === low)
+            .map(async (c) => {
+              try {
+                const faces = await getCardFaces(c.id);
+                const back = faces.back;
+                const frontKeys = (c.keywords || "").trim();
+                const backKeys = (back?.keywords || "").trim();
+                const mergedKeys = [frontKeys, backKeys]
+                  .filter(Boolean)
+                  .join(",")
+                  .split(",")
+                  .map((k: string) => k.trim())
+                  .filter(Boolean)
+                  .join(",");
+
+                const frontAtk = (c.atk || "").trim();
+                const backAtk = (back?.atk || "").trim();
+                const mergedAtk = [frontAtk, backAtk]
+                  .filter(Boolean)
+                  .map((a: string) => a.trim())
+                  .filter((v, i, arr) => arr.indexOf(v) === i)
+                  .join(",");
+
+                const frontHp = (c.hp || "").trim();
+                const backHp = (back?.hp || "").trim();
+                const mergedHp = [frontHp, backHp]
+                  .filter(Boolean)
+                  .map((h: string) => h.trim())
+                  .filter((v, i, arr) => arr.indexOf(v) === i)
+                  .join(",");
+
+                const aug: AugCard = {
+                  ...c,
+                  mergedKeywords: mergedKeys,
+                  mergedAtk,
+                  mergedHp,
+                };
+                return aug;
+              } catch {
+                return { ...c } as AugCard;
+              }
+            })
+        );
+
+        return out;
+      };
+
+      setProtagonistOptions(await mergeList(pros));
+      setPersonaOptions(await mergeList(personas));
+      setDeckOptions(await mergeList(deckCards));
     })();
   }, [selectedFaction]);
 
@@ -80,76 +130,53 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
     setEditing((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const [deckSearchText, setDeckSearchText] = useState("");
+  function useFilters() {
+    const [searchText, setSearchText] = useState("");
+    const [selectedCosts, setSelectedCosts] = useState<string[]>([]);
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
+    const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+    const [selectedAtks, setSelectedAtks] = useState<string[]>([]);
+    const [selectedHps, setSelectedHps] = useState<string[]>([]);
 
-  const [selectedCosts, setSelectedCosts] = useState<string[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
-  const [selectedAtks, setSelectedAtks] = useState<string[]>([]);
-  const [selectedHps, setSelectedHps] = useState<string[]>([]);
-
-  const clearDeckFilters = () => {
-    setDeckSearchText("");
-    setSelectedCosts([]);
-    setSelectedTypes([]);
-    setSelectedSubtypes([]);
-    setSelectedKeywords([]);
-    setSelectedAtks([]);
-    setSelectedHps([]);
-  };
-
-  const deckFilterValues = useMemo(() => {
-    const costs = new Set<string>();
-    const types = new Set<string>();
-    const subtypes = new Set<string>();
-    const keywords = new Set<string>();
-    const atks = new Set<string>();
-    const hps = new Set<string>();
-
-    deckOptions.forEach((c) => {
-      if (
-        c.cost !== undefined &&
-        c.cost !== null &&
-        String(c.cost).trim() !== ""
-      )
-        costs.add(String(c.cost));
-      if (c.type) types.add(c.type);
-      if (c.subtype) subtypes.add(c.subtype);
-      if (c.keywords) {
-        c.keywords
-          .split(",")
-          .map((k) => k.trim())
-          .forEach((k) => {
-            if (k) keywords.add(k);
-          });
-      }
-      if (c.atk !== undefined && c.atk !== null && String(c.atk).trim() !== "")
-        atks.add(String(c.atk));
-      if (c.hp !== undefined && c.hp !== null && String(c.hp).trim() !== "")
-        hps.add(String(c.hp));
-    });
-
-    const sortNumericLike = (arr: string[]) =>
-      arr.sort((a, b) => {
-        const na = Number(a);
-        const nb = Number(b);
-        if (!isNaN(na) && !isNaN(nb)) return na - nb;
-        return a.localeCompare(b);
-      });
+    const clearFilters = () => {
+      setSearchText("");
+      setSelectedCosts([]);
+      setSelectedTypes([]);
+      setSelectedSubtypes([]);
+      setSelectedKeywords([]);
+      setSelectedAtks([]);
+      setSelectedHps([]);
+    };
 
     return {
-      costs: sortNumericLike(Array.from(costs)),
-      types: Array.from(types).sort(),
-      subtypes: Array.from(subtypes).sort(),
-      keywords: Array.from(keywords).sort(),
-      atks: sortNumericLike(Array.from(atks)),
-      hps: sortNumericLike(Array.from(hps)),
+      searchText,
+      setSearchText,
+      selectedCosts,
+      setSelectedCosts,
+      selectedTypes,
+      setSelectedTypes,
+      selectedSubtypes,
+      setSelectedSubtypes,
+      selectedKeywords,
+      setSelectedKeywords,
+      selectedAtks,
+      setSelectedAtks,
+      selectedHps,
+      setSelectedHps,
+      clearFilters,
     };
-  }, [deckOptions]);
+  }
 
-  const applyDeckFilters = (cards: Card[]) => {
-    const q = deckSearchText.trim().toLowerCase();
+  const protagonistFilters = useFilters();
+  const personaFilters = useFilters();
+  const deckFilters = useFilters();
+
+  const applyFilters = (
+    cards: Card[] | (Card & { mergedKeywords?: string })[],
+    f: ReturnType<typeof useFilters>
+  ) => {
+    const q = f.searchText.trim().toLowerCase();
 
     return cards.filter((card) => {
       if (q) {
@@ -159,32 +186,46 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
       }
 
       if (
-        selectedCosts.length > 0 &&
-        !selectedCosts.includes(String(card.cost))
+        f.selectedCosts.length > 0 &&
+        !f.selectedCosts.includes(String(card.cost))
       )
         return false;
-      if (selectedTypes.length > 0 && !selectedTypes.includes(card.type))
+      if (f.selectedTypes.length > 0 && !f.selectedTypes.includes(card.type))
         return false;
       if (
-        selectedSubtypes.length > 0 &&
-        !selectedSubtypes.includes(card.subtype)
+        f.selectedSubtypes.length > 0 &&
+        !f.selectedSubtypes.includes(card.subtype)
       )
         return false;
 
-      if (selectedKeywords.length > 0) {
-        const cardKeys = (card.keywords || "")
+      if (f.selectedKeywords.length > 0) {
+        const rawKeywords =
+          (card as any).mergedKeywords ?? (card.keywords || "");
+        const cardKeys = rawKeywords
           .split(",")
-          .map((k) => k.trim().toLowerCase())
+          .map((k: string) => k.trim().toLowerCase())
           .filter(Boolean);
-        // match if the card has ANY of the selected keywords
-        if (!selectedKeywords.some((k) => cardKeys.includes(k.toLowerCase())))
+        if (!f.selectedKeywords.some((k) => cardKeys.includes(k.toLowerCase())))
           return false;
       }
 
-      if (selectedAtks.length > 0 && !selectedAtks.includes(String(card.atk)))
-        return false;
-      if (selectedHps.length > 0 && !selectedHps.includes(String(card.hp)))
-        return false;
+      if (f.selectedAtks.length > 0) {
+        const rawAtks = (card as any).mergedAtk ?? card.atk ?? "";
+        const cardAtkVals = String(rawAtks)
+          .split(",")
+          .map((a: string) => a.trim())
+          .filter(Boolean);
+        if (!f.selectedAtks.some((a) => cardAtkVals.includes(a))) return false;
+      }
+
+      if (f.selectedHps.length > 0) {
+        const rawHps = (card as any).mergedHp ?? card.hp ?? "";
+        const cardHpVals = String(rawHps)
+          .split(",")
+          .map((h: string) => h.trim())
+          .filter(Boolean);
+        if (!f.selectedHps.some((h) => cardHpVals.includes(h))) return false;
+      }
 
       return true;
     });
@@ -298,8 +339,14 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
         ? personaOptions
         : deckOptions;
     const map = section === "persona" ? personaSelectionMap : deckSelectionMap;
-    const displayOptions =
-      section === "deck" ? applyDeckFilters(options) : options;
+    const filters =
+      section === "protagonist"
+        ? protagonistFilters
+        : section === "persona"
+        ? personaFilters
+        : deckFilters;
+
+    const displayOptions = applyFilters(options, filters);
 
     return (
       <div className={styles.editGrid}>
@@ -402,9 +449,36 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
               </div>
 
               <div className={styles.sectionBody}>
-                {editing.protagonist
-                  ? renderEditGrid("protagonist")
-                  : renderSelectedList("protagonist")}
+                {editing.protagonist ? (
+                  <>
+                    <CardFilters
+                      options={protagonistOptions}
+                      searchText={protagonistFilters.searchText}
+                      setSearchText={protagonistFilters.setSearchText}
+                      selectedCosts={protagonistFilters.selectedCosts}
+                      setSelectedCosts={protagonistFilters.setSelectedCosts}
+                      selectedTypes={protagonistFilters.selectedTypes}
+                      setSelectedTypes={protagonistFilters.setSelectedTypes}
+                      selectedSubtypes={protagonistFilters.selectedSubtypes}
+                      setSelectedSubtypes={
+                        protagonistFilters.setSelectedSubtypes
+                      }
+                      selectedKeywords={protagonistFilters.selectedKeywords}
+                      setSelectedKeywords={
+                        protagonistFilters.setSelectedKeywords
+                      }
+                      selectedAtks={protagonistFilters.selectedAtks}
+                      setSelectedAtks={protagonistFilters.setSelectedAtks}
+                      selectedHps={protagonistFilters.selectedHps}
+                      setSelectedHps={protagonistFilters.setSelectedHps}
+                      clearFilters={protagonistFilters.clearFilters}
+                      hideTypeFilter
+                    />
+                    {renderEditGrid("protagonist")}
+                  </>
+                ) : (
+                  renderSelectedList("protagonist")
+                )}
               </div>
             </section>
 
@@ -427,9 +501,31 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
               </div>
 
               <div className={styles.sectionBody}>
-                {editing.persona
-                  ? renderEditGrid("persona")
-                  : renderSelectedList("persona")}
+                {editing.persona ? (
+                  <>
+                    <CardFilters
+                      options={personaOptions}
+                      searchText={personaFilters.searchText}
+                      setSearchText={personaFilters.setSearchText}
+                      selectedCosts={personaFilters.selectedCosts}
+                      setSelectedCosts={personaFilters.setSelectedCosts}
+                      selectedTypes={personaFilters.selectedTypes}
+                      setSelectedTypes={personaFilters.setSelectedTypes}
+                      selectedSubtypes={personaFilters.selectedSubtypes}
+                      setSelectedSubtypes={personaFilters.setSelectedSubtypes}
+                      selectedKeywords={personaFilters.selectedKeywords}
+                      setSelectedKeywords={personaFilters.setSelectedKeywords}
+                      selectedAtks={personaFilters.selectedAtks}
+                      setSelectedAtks={personaFilters.setSelectedAtks}
+                      selectedHps={personaFilters.selectedHps}
+                      setSelectedHps={personaFilters.setSelectedHps}
+                      clearFilters={personaFilters.clearFilters}
+                    />
+                    {renderEditGrid("persona")}
+                  </>
+                ) : (
+                  renderSelectedList("persona")
+                )}
               </div>
             </section>
 
@@ -454,182 +550,24 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
               <div className={styles.sectionBody}>
                 {editing.deck ? (
                   <>
-                    <div className={styles.deckFilters}>
-                      <div className={styles.searchContainer}>
-                        <input
-                          className={styles.searchBar}
-                          placeholder="Search name or id"
-                          value={deckSearchText}
-                          onChange={(e) => setDeckSearchText(e.target.value)}
-                        />
-
-                        <button
-                          type="button"
-                          className={styles.editButton}
-                          onClick={clearDeckFilters}
-                        >
-                          Clear
-                        </button>
-                      </div>
-
-                      <div className={styles.filterRow}>
-                        <div className={styles.filterGroup}>
-                          <div className={styles.filterTitle}>Cost</div>
-                          <div className={styles.filterChips}>
-                            {deckFilterValues.costs.map((c) => (
-                              <button
-                                key={c}
-                                type="button"
-                                className={
-                                  selectedCosts.includes(c)
-                                    ? styles.chip + " " + styles.activeChip
-                                    : styles.chip
-                                }
-                                onClick={() =>
-                                  setSelectedCosts((prev) =>
-                                    prev.includes(c)
-                                      ? prev.filter((x) => x !== c)
-                                      : [...prev, c]
-                                  )
-                                }
-                              >
-                                {c}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className={styles.filterGroup}>
-                          <div className={styles.filterTitle}>Type</div>
-                          <div className={styles.filterChips}>
-                            {deckFilterValues.types.map((t) => (
-                              <button
-                                key={t}
-                                type="button"
-                                className={
-                                  selectedTypes.includes(t)
-                                    ? styles.chip + " " + styles.activeChip
-                                    : styles.chip
-                                }
-                                onClick={() =>
-                                  setSelectedTypes((prev) =>
-                                    prev.includes(t)
-                                      ? prev.filter((x) => x !== t)
-                                      : [...prev, t]
-                                  )
-                                }
-                              >
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className={styles.filterGroup}>
-                          <div className={styles.filterTitle}>Subtype</div>
-                          <div className={styles.filterChips}>
-                            {deckFilterValues.subtypes.map((s) => (
-                              <button
-                                key={s}
-                                type="button"
-                                className={
-                                  selectedSubtypes.includes(s)
-                                    ? styles.chip + " " + styles.activeChip
-                                    : styles.chip
-                                }
-                                onClick={() =>
-                                  setSelectedSubtypes((prev) =>
-                                    prev.includes(s)
-                                      ? prev.filter((x) => x !== s)
-                                      : [...prev, s]
-                                  )
-                                }
-                              >
-                                {s}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className={styles.filterGroup}>
-                          <div className={styles.filterTitle}>Keyword</div>
-                          <div className={styles.filterChips}>
-                            {deckFilterValues.keywords.map((k) => (
-                              <button
-                                key={k}
-                                type="button"
-                                className={
-                                  selectedKeywords.includes(k)
-                                    ? styles.chip + " " + styles.activeChip
-                                    : styles.chip
-                                }
-                                onClick={() =>
-                                  setSelectedKeywords((prev) =>
-                                    prev.includes(k)
-                                      ? prev.filter((x) => x !== k)
-                                      : [...prev, k]
-                                  )
-                                }
-                              >
-                                {k}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className={styles.filterGroup}>
-                          <div className={styles.filterTitle}>ATK</div>
-                          <div className={styles.filterChips}>
-                            {deckFilterValues.atks.map((a) => (
-                              <button
-                                key={a}
-                                type="button"
-                                className={
-                                  selectedAtks.includes(a)
-                                    ? styles.chip + " " + styles.activeChip
-                                    : styles.chip
-                                }
-                                onClick={() =>
-                                  setSelectedAtks((prev) =>
-                                    prev.includes(a)
-                                      ? prev.filter((x) => x !== a)
-                                      : [...prev, a]
-                                  )
-                                }
-                              >
-                                {a}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className={styles.filterGroup}>
-                          <div className={styles.filterTitle}>HP</div>
-                          <div className={styles.filterChips}>
-                            {deckFilterValues.hps.map((h) => (
-                              <button
-                                key={h}
-                                type="button"
-                                className={
-                                  selectedHps.includes(h)
-                                    ? styles.chip + " " + styles.activeChip
-                                    : styles.chip
-                                }
-                                onClick={() =>
-                                  setSelectedHps((prev) =>
-                                    prev.includes(h)
-                                      ? prev.filter((x) => x !== h)
-                                      : [...prev, h]
-                                  )
-                                }
-                              >
-                                {h}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <CardFilters
+                      options={deckOptions}
+                      searchText={deckFilters.searchText}
+                      setSearchText={deckFilters.setSearchText}
+                      selectedCosts={deckFilters.selectedCosts}
+                      setSelectedCosts={deckFilters.setSelectedCosts}
+                      selectedTypes={deckFilters.selectedTypes}
+                      setSelectedTypes={deckFilters.setSelectedTypes}
+                      selectedSubtypes={deckFilters.selectedSubtypes}
+                      setSelectedSubtypes={deckFilters.setSelectedSubtypes}
+                      selectedKeywords={deckFilters.selectedKeywords}
+                      setSelectedKeywords={deckFilters.setSelectedKeywords}
+                      selectedAtks={deckFilters.selectedAtks}
+                      setSelectedAtks={deckFilters.setSelectedAtks}
+                      selectedHps={deckFilters.selectedHps}
+                      setSelectedHps={deckFilters.setSelectedHps}
+                      clearFilters={deckFilters.clearFilters}
+                    />
 
                     {renderEditGrid("deck")}
                   </>
