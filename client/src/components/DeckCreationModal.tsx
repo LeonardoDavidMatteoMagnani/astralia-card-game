@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { getCardsByField } from "../services/cardDataService";
 import type { Card } from "../types/Card.ts";
 import type { AugCard } from "../types/AugCard";
+import type { Deck } from "../types/Deck";
+import { createDeck, updateDeck } from "../services/deckService";
 import CardDisplay from "./CardDisplay";
 import CardDetailsModal from "./CardDetailsModal";
 import CardFilters from "./CardFilters";
@@ -9,6 +11,8 @@ import styles from "./DeckCreationModal.module.scss";
 
 interface DeckCreationModalProps {
   onClose: () => void;
+  initialDeck?: Deck;
+  onSaved?: (deck: Deck) => void;
 }
 
 const factions = ["red", "blue", "green", "purple", "pink"];
@@ -20,8 +24,20 @@ interface SelectedCard {
   qty: number;
 }
 
-export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
-  const [selectedFaction, setSelectedFaction] = useState<string | null>(null);
+export default function DeckCreationModal({
+  onClose,
+  initialDeck,
+  onSaved,
+}: DeckCreationModalProps) {
+  const [selectedFaction, setSelectedFaction] = useState<string | null>(
+    initialDeck?.faction ?? null
+  );
+  const [deckName, setDeckName] = useState<string>(
+    initialDeck?.name ?? "New Deck"
+  );
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(
+    initialDeck?.backgroundImage ?? null
+  );
 
   const [protagonistOptions, setProtagonistOptions] = useState<AugCard[]>([]);
   const [personaOptions, setPersonaOptions] = useState<AugCard[]>([]);
@@ -114,6 +130,44 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
       setDeckOptions(await mergeList(deckCards));
     })();
   }, [selectedFaction]);
+
+  useEffect(() => {
+    if (!initialDeck) return;
+    if (
+      !selectedFaction ||
+      selectedFaction.toLowerCase() !== initialDeck.faction.toLowerCase()
+    )
+      return;
+    const tryPrefill = async () => {
+      const { getCardFaces } = await import("../services/cardDataService");
+      if (initialDeck.protagonist) {
+        const faces = await getCardFaces(initialDeck.protagonist);
+        if (faces.front) {
+          setProtagonistSelection({ card: faces.front, qty: 1 });
+        }
+      }
+      const pMap: Record<string, { card: Card; qty: number }> = {};
+      for (const id of initialDeck.persona) {
+        const faces = await getCardFaces(id);
+        if (faces.front) pMap[id] = { card: faces.front, qty: 1 };
+      }
+      setPersonaSelectionMap(pMap);
+      const dMap: Record<string, { card: Card; qty: number }> = {};
+      for (const ent of initialDeck.deck) {
+        const faces = await getCardFaces(ent.id);
+        if (faces.front) dMap[ent.id] = { card: faces.front, qty: ent.qty };
+      }
+      setDeckSelectionMap(dMap);
+    };
+    tryPrefill();
+    setBackgroundImage(initialDeck.backgroundImage ?? null);
+  }, [
+    initialDeck,
+    selectedFaction,
+    personaOptions.length,
+    deckOptions.length,
+    protagonistOptions.length,
+  ]);
 
   const sectionLimits: Record<SectionKey, number> = {
     protagonist: 1,
@@ -399,13 +453,46 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
     );
   };
 
+  function buildDeckPayload(): Omit<Deck, "id" | "updatedAt"> {
+    const personaIds = Object.keys(personaSelectionMap);
+    const deckEntries = Object.values(deckSelectionMap).map((it) => ({
+      id: it.card.id,
+      qty: it.qty,
+    }));
+    return {
+      name: deckName.trim() || "New Deck",
+      faction: selectedFaction || "red",
+      protagonist: protagonistSelection?.card.id ?? null,
+      persona: personaIds,
+      deck: deckEntries,
+      backgroundImage: backgroundImage ?? null,
+    };
+  }
+
+  const handleSave = () => {
+    if (!selectedFaction) {
+      alert("Please select a faction first.");
+      return;
+    }
+
+    const payload = buildDeckPayload();
+    let saved: Deck;
+    if (initialDeck) {
+      saved = updateDeck({
+        ...payload,
+        id: initialDeck.id,
+        updatedAt: Date.now(),
+      });
+    } else {
+      saved = createDeck(payload);
+    }
+    onSaved?.(saved);
+    onClose();
+  };
+
   return (
     <div className={styles.modalBackdrop}>
       <div className={styles.modal}>
-        <button className={styles.closeButton} onClick={onClose}>
-          ✕
-        </button>
-
         {detailCard && (
           <CardDetailsModal card={detailCard} onClose={closeCardDetails} />
         )}
@@ -414,20 +501,84 @@ export default function DeckCreationModal({ onClose }: DeckCreationModalProps) {
           <>
             <h2>Select Deck Faction</h2>
             <div className={styles.factionList}>
-              {factions.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setSelectedFaction(f)}
-                  className={styles.factionButton}
-                >
-                  {f.toUpperCase()}
-                </button>
-              ))}
+              {factions.map((f) => {
+                const cap = f.charAt(0).toUpperCase() + f.slice(1);
+                const factionClass = styles[
+                  `faction${cap}` as keyof typeof styles
+                ] as string;
+                return (
+                  <button
+                    key={f}
+                    onClick={() => setSelectedFaction(f)}
+                    className={`${styles.factionButton} ${factionClass}`}
+                    aria-label={`Select ${f} faction`}
+                  >
+                    <span className={styles.factionLabel}>
+                      {f.toUpperCase()}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </>
         ) : (
           <>
             <h2>{selectedFaction.toUpperCase()} Deck Builder</h2>
+
+            <div className={styles.editorHeader}>
+              <div className={styles.headerLeft}>
+                <input
+                  value={deckName}
+                  onChange={(e) => setDeckName(e.target.value)}
+                  placeholder="Deck name"
+                  className={styles.deckNameInput}
+                />
+                <input
+                  id="deck-bg-input"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () =>
+                      setBackgroundImage(String(reader.result));
+                    reader.readAsDataURL(file);
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <button
+                  className={styles.editButton}
+                  onClick={() =>
+                    document.getElementById("deck-bg-input")?.click()
+                  }
+                >
+                  Set Background
+                </button>
+                {backgroundImage && (
+                  <button
+                    className={styles.editButton}
+                    onClick={() => setBackgroundImage(null)}
+                  >
+                    Remove Background
+                  </button>
+                )}
+              </div>
+
+              <div className={styles.headerActions}>
+                <button className={styles.editButton} onClick={handleSave}>
+                  Save Deck
+                </button>
+                <button
+                  className={styles.closeButton}
+                  onClick={onClose}
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
 
             <section className={styles.section}>
               <div className={styles.sectionHeader}>

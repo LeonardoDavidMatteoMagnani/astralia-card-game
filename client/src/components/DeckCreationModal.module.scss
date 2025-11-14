@@ -13,46 +13,156 @@
   background: var(--background-color-tertiary);
   padding: 1rem;
   border-radius: 10px;
-  width: 95%;
+  width: calc(100% - 2rem);
   height: 90vh;
   max-width: 1200px;
   position: relative;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   overflow: auto;
+  overflow-x: hidden;
+
+  h2 {
+    text-align: center;
+  }
 }
 
 .closeButton {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   background: transparent;
   border: none;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: var(--color-text-primary);
+}
+
+.editorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5rem 0.25rem 0.75rem 0.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.headerLeft {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.deckNameInput {
+  background: var(--background-color-secondary);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--color-text-primary);
 }
 
 .factionList {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: row;
+  gap: 1rem;
   justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  margin: 0.75rem 0 1rem 0;
 }
 
 .factionButton {
-  padding: 0.5rem 0.9rem;
-  background: var(--background-color-secondary);
-  border: none;
-  border-radius: 6px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 20%;
+  padding: 0.6rem 0.6rem;
+  height: 40rem;
+  border-radius: 16px;
   cursor: pointer;
   text-transform: uppercase;
-  transition: background 0.12s, transform 0.08s;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.55), inset 0 -6px 18px rgba(0,0,0,0.12);
+  transition: transform 0.32s cubic-bezier(.2,.9,.2,1), box-shadow 0.28s ease, filter 0.2s;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
 
-  &:hover { 
-    background: #2b2b2b; transform: translateY(-1px); 
-  }
+.factionButton:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 -8px 22px rgba(0,0,0,0.14);
+  filter: saturate(1.06) contrast(1.03);
+}
+
+.factionButton::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  transform: rotate(-18deg) translateX(0);
+  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.02));
+  opacity: 0.14;
+  transition: transform 0.9s ease, opacity 0.45s ease;
+  pointer-events: none;
+}
+
+.factionButton:hover::before {
+  transform: rotate(-18deg) translateX(220%);
+  opacity: 0.26;
+}
+
+.factionRed {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.18)),
+    linear-gradient(135deg, #ff7b7b 0%, #e64a4a 60%, #b83a3a 100%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+}
+.factionBlue {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
+    linear-gradient(135deg, #7fc9ff 0%, #3a8ee6 60%, #1e6fcf 100%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+}
+.factionGreen {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
+    linear-gradient(135deg, #8ef0b0 0%, #34c47a 60%, #1f9a61 100%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+}
+.factionPurple {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
+    linear-gradient(135deg, #cdb3ff 0%, #7b72f1 60%, #594fe0 100%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+}
+.factionPink {
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
+    linear-gradient(135deg, #f3a6bf 0%, #e676ad 60%, #c35f88 100%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+}
+
+@media (max-width: 920px) {
+  .factionList { flex-direction: column; }
+  .factionButton { width: 100%; height: 72px; border-radius: 10px; }
+  .factionLabel { transform: none; }
 }
 
 .cardList {
@@ -109,6 +219,7 @@
 .sectionBody {
   padding: 0.75rem 0;
   width: 100%;
+  min-width: 0;
 }
 
 .selectedGrid {
@@ -118,6 +229,7 @@
   width: 100%;
   align-items: flex-start;
   justify-content: center;
+  min-width: 0;
 }
 
 .selectedItem {
@@ -176,6 +288,7 @@
   align-items: center;
   justify-content: center;
   margin-top: 1rem;
+  min-width: 0;
 }
 
 .editRow {
@@ -215,6 +328,11 @@
   max-width: 100%;
 }
 
+.modal * {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 .modalContentWrapper {
   display: flex;
   flex-direction: column;
@@ -223,8 +341,55 @@
   padding-right: 6px;
 }
 
+.modal, .modalContentWrapper {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-primary) rgba(255,255,255,0.02);
+}
+
+.modal::-webkit-scrollbar,
+.modalContentWrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.modal::-webkit-scrollbar-track,
+.modalContentWrapper::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.02);
+  border-radius: 10px;
+}
+
+.modal::-webkit-scrollbar-thumb,
+.modalContentWrapper::-webkit-scrollbar-thumb {
+  background: var(--color-text-primary);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+
+.modal::-webkit-scrollbar-thumb:hover,
+.modalContentWrapper::-webkit-scrollbar-thumb:hover {
+  transform: scale(1.02);
+  filter: brightness(0.95);
+}
+
+
 @media (max-width: 640px) {
   .modal { padding: 0.5rem; height: 95vh; }
   .editGrid { grid-template-columns: repeat(2, 1fr); }
   .cardImage { width: 92px; }
+}
+
+.factionLabel {
+  display: inline-block;
+  transform-origin: center;
+  white-space: nowrap;
+  font-size: 1.05rem;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.45);
+}
+
+.factionButton[aria-pressed="true"], .factionButton.active {
+  outline: 3px solid rgba(255,255,255,0.08);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 34px 72px rgba(0,0,0,0.62), inset 0 -10px 28px rgba(0,0,0,0.16);
 }

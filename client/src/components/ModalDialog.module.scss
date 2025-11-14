@@ -1,0 +1,83 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 10000;
+}
+
+.dialog {
+  width: 95%;
+  max-width: 520px;
+  background: var(--background-color-tertiary);
+  border-radius: 12px;
+  padding: 1rem;
+  box-sizing: border-box;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+}
+
+.dialogTitle {
+  margin: 0 0 0.5rem 0;
+}
+
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.codeInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 56px;
+  max-height: 140px;
+  padding: 0.45rem 0.6rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  resize: vertical;
+  overflow: auto;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.errorText {
+  color: #ffb3b3;
+  font-size: 0.9rem;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.primaryBtn {
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  background: linear-gradient(135deg, #e676ad 0%, #7b72f1 100%);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(123,114,241,0.25), 0 2px 8px rgba(230,118,173,0.15);
+
+  &:hover {
+    box-shadow: 0 6px 18px rgba(123,114,241,0.35), 0 3px 10px rgba(230,118,173,0.25);
+  }
+}
+
+.ghostBtn {
+  padding: 0.55rem 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--color-text-primary);
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+}
