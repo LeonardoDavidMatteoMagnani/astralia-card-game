@@ -49,7 +49,7 @@
 
     &.playButton {
       color: #fff;
-      background: linear-gradient(45deg, #e676ad, #7b72f1);
+      background: var(--special-button-color);
     }
 
     &.decksButton {
