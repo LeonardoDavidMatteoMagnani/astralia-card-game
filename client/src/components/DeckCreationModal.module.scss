@@ -100,7 +100,10 @@
   border: 1px solid rgba(255,255,255,0.06);
   overflow: hidden;
   -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(0px);
+    background-repeat: no-repeat, no-repeat, no-repeat;
+    background-position: center bottom, center center, 0 0;
+    background-size: auto 100%, cover, auto;
 }
 
 .factionButton:hover {
@@ -130,38 +133,53 @@
 
 .factionRed {
   background-image:
+    url('../assets/decks/red_banner.png'),
     linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.18)),
     linear-gradient(135deg, #ff7b7b 0%, #e64a4a 60%, #b83a3a 100%),
     repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
 }
 .factionBlue {
   background-image:
+    url('../assets/decks/blue_banner.png'),
     linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
     linear-gradient(135deg, #7fc9ff 0%, #3a8ee6 60%, #1e6fcf 100%),
     repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
 }
 .factionGreen {
   background-image:
+    url('../assets/decks/green_banner.png'),
     linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
     linear-gradient(135deg, #8ef0b0 0%, #34c47a 60%, #1f9a61 100%),
     repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
 }
 .factionPurple {
   background-image:
+    url('../assets/decks/purple_banner.png'),
     linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
     linear-gradient(135deg, #cdb3ff 0%, #7b72f1 60%, #594fe0 100%),
     repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
 }
 .factionPink {
   background-image:
+    url('../assets/decks/pink_banner.png'),
     linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
     linear-gradient(135deg, #f3a6bf 0%, #e676ad 60%, #c35f88 100%),
     repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
 }
 
+@media (min-width: 920px) {
+  .factionRed {
+    background-position: 85% bottom, center center, 0 0;
+  }
+
+  .factionBlue {
+    background-position: 60% bottom, center center, 0 0;
+  }
+}
+
 @media (max-width: 920px) {
   .factionList { flex-direction: column; }
-  .factionButton { width: 100%; height: 72px; border-radius: 10px; }
+  .factionButton { width: 100%; height: 72px; border-radius: 10px; background-size: auto 100%, cover, auto; }
   .factionLabel { transform: none; }
 }
 
@@ -382,10 +400,23 @@
 
 .factionLabel {
   display: inline-block;
+  background: rgba(0,0,0,0.45);
+  padding: 6px 10px;
+  border-radius: 8px;
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
   transform-origin: center;
   white-space: nowrap;
-  font-size: 1.05rem;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.45);
+  font-size: 1.25rem;
+}
+
+@media (max-width: 920px) {
+  .factionLabel {
+    padding: 4px 8px;
+    font-size: 1.05rem;
+    box-shadow: none;
+    background: rgba(0,0,0,0.36);
+  }
 }
 
 .factionButton[aria-pressed="true"], .factionButton.active {
