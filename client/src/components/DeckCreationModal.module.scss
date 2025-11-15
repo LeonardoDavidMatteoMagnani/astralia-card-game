@@ -29,14 +29,57 @@
   }
 }
 
-.closeButton {
+.modalHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  position: relative;
+  padding: 26px 30px;
+  border-radius: 8px 8px 0px 0px;
+  box-sizing: border-box;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+
+.modalHeader .closeButton {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
-  font-size: 1.2rem;
-  cursor: pointer;
+  color: #fff;
+  font-size: 1.1rem;
   padding: 6px 8px;
-  border-radius: 6px;
-  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.modalHeader .headerActions {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.saveButton, .modalHeader .editButton {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 6px 10px;
+  border-radius: 8px;
 }
 
 .editorHeader {
@@ -48,6 +91,27 @@
   padding: 0.5rem 0.25rem 0.75rem 0.25rem;
   margin-top: 0.5rem;
   margin-bottom: 0.75rem;
+}
+
+.factionHeaderRed {
+  background-image:
+    var(--red-faction-color)
+}
+.factionHeaderBlue {
+  background-image:
+    var(--blue-faction-color)
+}
+.factionHeaderGreen {
+  background-image:
+    var(--green-faction-color)
+}
+.factionHeaderPurple {
+  background-image:
+    var(--purple-faction-color)
+}
+.factionHeaderPink {
+  background-image:
+    var(--pink-faction-color)
 }
 
 .headerLeft {
@@ -134,37 +198,27 @@
 .factionRed {
   background-image:
     url('../assets/decks/red_banner.png'),
-    linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.18)),
-    linear-gradient(135deg, #ff7b7b 0%, #e64a4a 60%, #b83a3a 100%),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+    var(--red-faction-color)
 }
 .factionBlue {
   background-image:
     url('../assets/decks/blue_banner.png'),
-    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
-    linear-gradient(135deg, #7fc9ff 0%, #3a8ee6 60%, #1e6fcf 100%),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+    var(--blue-faction-color)
 }
 .factionGreen {
   background-image:
     url('../assets/decks/green_banner.png'),
-    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
-    linear-gradient(135deg, #8ef0b0 0%, #34c47a 60%, #1f9a61 100%),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+    var(--green-faction-color)
 }
 .factionPurple {
   background-image:
     url('../assets/decks/purple_banner.png'),
-    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
-    linear-gradient(135deg, #cdb3ff 0%, #7b72f1 60%, #594fe0 100%),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+    var(--purple-faction-color)
 }
 .factionPink {
   background-image:
     url('../assets/decks/pink_banner.png'),
-    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.14)),
-    linear-gradient(135deg, #f3a6bf 0%, #e676ad 60%, #c35f88 100%),
-    repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
+    var(--pink-faction-color)
 }
 
 @media (min-width: 920px) {

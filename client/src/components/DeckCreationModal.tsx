@@ -523,7 +523,31 @@ export default function DeckCreationModal({
           </>
         ) : (
           <>
-            <h2>{selectedFaction.toUpperCase()} Deck Builder</h2>
+            {(() => {
+              const cap =
+                (selectedFaction || "").charAt(0).toUpperCase() +
+                (selectedFaction || "").slice(1);
+              const factionClass =
+                (styles[
+                  `factionHeader${cap}` as keyof typeof styles
+                ] as string) || "";
+              return (
+                <div className={`${styles.modalHeader} ${factionClass}`}>
+                  <h2 className={styles.modalTitle}>
+                    {selectedFaction.toUpperCase()} Deck Builder
+                  </h2>
+                  <div className={styles.headerActions}>
+                    <button
+                      className={styles.closeButton}
+                      onClick={onClose}
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className={styles.editorHeader}>
               <div className={styles.headerLeft}>
@@ -569,13 +593,6 @@ export default function DeckCreationModal({
               <div className={styles.headerActions}>
                 <button className={styles.editButton} onClick={handleSave}>
                   Save Deck
-                </button>
-                <button
-                  className={styles.closeButton}
-                  onClick={onClose}
-                  aria-label="Close"
-                >
-                  ✕
                 </button>
               </div>
             </div>
