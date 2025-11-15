@@ -65,11 +65,6 @@
   color: #fff;
   background: linear-gradient(135deg, #e676ad 0%, #7b72f1 100%);
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(123,114,241,0.25), 0 2px 8px rgba(230,118,173,0.15);
-
-  &:hover {
-    box-shadow: 0 6px 18px rgba(123,114,241,0.35), 0 3px 10px rgba(230,118,173,0.25);
-  }
 }
 
 .ghostBtn {

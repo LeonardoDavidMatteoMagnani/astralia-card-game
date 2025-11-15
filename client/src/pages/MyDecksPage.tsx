@@ -31,6 +31,12 @@ export default function MyDecksPage() {
     const code = exportDeck(deck);
     setShareCode(code);
     setShareTitle(deck.name || "Untitled Deck");
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
+    }
     setShowShare(true);
   };
 
@@ -40,6 +46,8 @@ export default function MyDecksPage() {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
     "idle"
   );
+  const [showDelete, setShowDelete] = useState(false);
+  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
 
   const processImport = (code: string) => {
     const trimmed = code.trim();
@@ -101,10 +109,8 @@ export default function MyDecksPage() {
             deck={d}
             onEdit={(deck) => setEditingDeck(deck)}
             onDelete={(deck) => {
-              if (confirm("Delete deck?")) {
-                deleteDeck(deck.id);
-                refresh();
-              }
+              setDeckToDelete(deck);
+              setShowDelete(true);
             }}
             onShare={handleShare}
           />
@@ -129,36 +135,26 @@ export default function MyDecksPage() {
           ariaId="shareTitle"
           onClose={() => setShowShare(false)}
           secondary={{ label: "Close", onClick: () => setShowShare(false) }}
-          primary={{
-            label: "Copy",
-            onClick: async () => {
-              try {
-                await navigator.clipboard.writeText(shareCode);
-                setCopyStatus("copied");
-                setTimeout(() => setCopyStatus("idle"), 1500);
-              } catch {
-                setCopyStatus("failed");
-                setTimeout(() => setCopyStatus("idle"), 2000);
-              }
-            },
-          }}
         >
-          <textarea
-            className={modalStyles.codeInput}
-            rows={3}
-            readOnly
-            value={shareCode}
-          />
-          <div style={{ marginTop: 8 }}>
-            {copyStatus === "copied" && (
-              <div style={{ color: "#9ee6b4", fontWeight: 700 }}>Copied!</div>
-            )}
-            {copyStatus === "failed" && (
-              <div style={{ color: "#ffb4b4", fontWeight: 700 }}>
-                Copy failed — use keyboard to copy.
+          {copyStatus === "copied" ? (
+            <div style={{ paddingTop: 8, fontWeight: 700, color: "#9ee6b4" }}>
+              Deck share code copied to clipboard.
+            </div>
+          ) : (
+            <div style={{ paddingTop: 8 }}>
+              <div
+                style={{ color: "#ffb4b4", fontWeight: 700, marginBottom: 8 }}
+              >
+                Copy failed — use the text below to copy manually.
               </div>
-            )}
-          </div>
+              <textarea
+                className={modalStyles.codeInput}
+                rows={3}
+                readOnly
+                value={shareCode}
+              />
+            </div>
+          )}
         </ModalDialog>
       )}
 
@@ -192,6 +188,40 @@ export default function MyDecksPage() {
           {importError && (
             <div className={modalStyles.errorText}>{importError}</div>
           )}
+        </ModalDialog>
+      )}
+
+      {showDelete && deckToDelete && (
+        <ModalDialog
+          title={`Delete: ${deckToDelete.name}`}
+          ariaId="deleteTitle"
+          onClose={() => {
+            setShowDelete(false);
+            setDeckToDelete(null);
+          }}
+          secondary={{
+            label: "Cancel",
+            onClick: () => {
+              setShowDelete(false);
+              setDeckToDelete(null);
+            },
+          }}
+          primary={{
+            label: "Delete",
+            onClick: () => {
+              if (deckToDelete) {
+                deleteDeck(deckToDelete.id);
+                refresh();
+              }
+              setShowDelete(false);
+              setDeckToDelete(null);
+            },
+          }}
+        >
+          <div>
+            Are you sure you want to delete this deck? This action cannot be
+            undone.
+          </div>
         </ModalDialog>
       )}
     </div>
