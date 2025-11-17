@@ -7,6 +7,7 @@ import { createDeck, updateDeck } from "../services/deckService";
 import CardDisplay from "./CardDisplay";
 import CardDetailsModal from "./CardDetailsModal";
 import CardFilters from "./CardFilters";
+import FactionSelection from "./FactionSelection";
 import styles from "./DeckCreationModal.module.scss";
 
 interface DeckCreationModalProps {
@@ -498,29 +499,7 @@ export default function DeckCreationModal({
         )}
 
         {!selectedFaction ? (
-          <>
-            <h2>Select Deck Faction</h2>
-            <div className={styles.factionList}>
-              {factions.map((f) => {
-                const cap = f.charAt(0).toUpperCase() + f.slice(1);
-                const factionClass = styles[
-                  `faction${cap}` as keyof typeof styles
-                ] as string;
-                return (
-                  <button
-                    key={f}
-                    onClick={() => setSelectedFaction(f)}
-                    className={`${styles.factionButton} ${factionClass}`}
-                    aria-label={`Select ${f} faction`}
-                  >
-                    <span className={styles.factionLabel}>
-                      {f.toUpperCase()}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </>
+          <FactionSelection factions={factions} onSelect={setSelectedFaction} />
         ) : (
           <>
             {(() => {
