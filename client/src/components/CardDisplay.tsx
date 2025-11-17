@@ -21,7 +21,6 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   useEffect(() => {
     (async () => {
       if (!enableFlip) return;
-
       const { back } = await getCardFaces(card.id);
       if (back) setBackFace(back);
     })();
@@ -38,13 +37,12 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   };
 
   return (
-    <div className={`${styles.cardDisplay}`} onClick={handleClick}>
+    <div className={styles.cardDisplay} onClick={handleClick}>
       <img
         src={getCardImagePath(currentFace)}
         alt={currentFace.name}
         className={styles.cardImage}
       />
-
       {backFace && enableFlip && (
         <button
           className={styles.flipButton}

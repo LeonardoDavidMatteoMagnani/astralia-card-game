@@ -359,23 +359,8 @@ export default function DeckCreationModal({
       <div className={styles.selectedGrid}>
         {items.map((it) => (
           <div key={it.card.id} className={styles.selectedItem}>
-            <div
-              className={styles.cardWrapper}
-              onClick={(e) => {
-                // don't open details if the click originated from an interactive child (flip button, etc.)
-                const target = e.target as HTMLElement | null;
-                if (!target) return;
-                if (
-                  target.closest("button") ||
-                  target.closest("a") ||
-                  target.closest("input")
-                )
-                  return;
-                openCardDetails(it.card);
-              }}
-              role="button"
-            >
-              <CardDisplay card={it.card} />
+            <div className={styles.cardWrapper}>
+              <CardDisplay card={it.card} onClick={openCardDetails} />
               {section === "deck" && (
                 <div className={styles.qtyBadge}>{it.qty}</div>
               )}
