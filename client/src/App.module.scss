@@ -8,6 +8,15 @@
 .logo {
   height: 10em;
   padding: 1.5em;
+   .nameInput {
+     background: var(--background-color-secondary);
+     border: 1px solid rgba(255,255,255,0.1);
+     padding: 8px 12px;
+     border-radius: 8px;
+     color: var(--color-text-primary);
+     font-size: 0.95rem;
+     width: 220px;
+   }
   will-change: filter, transform;
   transition: transform 0.3s ease, filter 0.3s ease;
 

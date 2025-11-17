@@ -1,0 +1,113 @@
+.lobbyRoot {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.playerRow {
+  display: flex;
+  flex: 1;
+  gap: 1rem;
+  align-items: stretch;
+  justify-content: space-between;
+}
+
+.playerPanel {
+  flex: 1;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 1rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: var(--background-color-secondary);
+}
+
+.centerVs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  text-shadow: 0 0 12px rgba(0,0,0,0.4);
+}
+
+.largeCardWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.25);
+}
+
+.deckInfo {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.startButton {
+  background: var(--special-button-color);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+.startButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.nameInput {
+  background: var(--background-color-tertiary);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  width: 100%;
+}
+
+.leaveButton {
+  background: linear-gradient(180deg,#2a2a2a,#1b1b1b);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.factionDeckButton {
+  background: linear-gradient(180deg,#3f3f3f,#262626);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}

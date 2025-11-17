@@ -1,9 +1,49 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import astraliaLogo from "./assets/logo_astralia_chronicles.png";
 import styles from "./App.module.scss";
+import { gameConnection } from "./services/gameConnection";
 
 function App() {
   const navigate = useNavigate();
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("astralia.playerName");
+      if (saved) setName(saved);
+    } catch {}
+  }, []);
+
+  function ensureConnection() {
+    gameConnection.connect();
+  }
+
+  function hostGame() {
+    ensureConnection();
+    const chosen = name || "Host";
+    try {
+      localStorage.setItem("astralia.role", "host");
+    } catch {}
+    const off = gameConnection.runWhenConnected(() => {
+      gameConnection.host(chosen);
+    });
+    navigate("/lobby");
+    void off;
+  }
+
+  function joinGame() {
+    ensureConnection();
+    const chosen = name || "Guest";
+    try {
+      localStorage.setItem("astralia.role", "guest");
+    } catch {}
+    const off = gameConnection.runWhenConnected(() => {
+      gameConnection.join(chosen);
+    });
+    navigate("/lobby");
+    void off;
+  }
 
   return (
     <div className={styles.pageRoot}>
@@ -11,8 +51,24 @@ function App() {
         <img src={astraliaLogo} className={styles.logo} alt="Astralia logo" />
       </a>
       <div className={styles.menuLayout}>
-        <button className={styles.playButton}>join game</button>
-        <button className={styles.playButton}>host game</button>
+        <input
+          placeholder="your name"
+          value={name}
+          onChange={(e) => {
+            const v = e.target.value;
+            setName(v);
+            try {
+              localStorage.setItem("astralia.playerName", v);
+            } catch {}
+          }}
+          className={styles.nameInput}
+        />
+        <button className={styles.playButton} onClick={joinGame}>
+          join game
+        </button>
+        <button className={styles.playButton} onClick={hostGame}>
+          host game
+        </button>
         <button
           className={styles.decksButton}
           onClick={() => navigate("/my-decks")}
