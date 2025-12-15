@@ -4,6 +4,8 @@ import http from 'http';
 import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { randomUUID } from 'crypto';
+import localtunnel from 'localtunnel';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,12 +19,20 @@ const lobby = {
   host: null,
   guest: null,
   started: false,
-  code: generateCode(),
+  code: null,
+  publicUrl: null, // localtunnel URL
+  tunnel: null, // localtunnel object for cleanup
 };
 
-function generateCode() {
-  // Generate a 4-character uppercase code
-  return Math.random().toString(36).substring(2, 6).toUpperCase();
+function generateCode(url) {
+  // Derive a unique 8-character code from the tunnel URL
+  if (url) {
+    // Extract domain from URL and hash it to a code
+    const domain = url.replace(/^https?:\/\//, '').replace(/[.-]/g, '');
+    return domain.substring(0, 8).toUpperCase();
+  }
+  // Fallback to UUID if no URL provided (shouldn't happen in production)
+  return randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase();
 }
 
 function buildState() {
@@ -58,10 +68,48 @@ function startServer() {
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
 
-    socket.on('lobby:host', (name) => {
-      if (lobby.host) return;
+    socket.on('lobby:host', async (name) => {
+      console.log('lobby:host received from', socket.id, '| current host:', lobby.host?.socketId);
+      if (lobby.host) {
+        console.log('Host already exists, rejecting');
+        return;
+      }
+      
+      // Set host immediately to prevent race conditions
       lobby.host = { socketId: socket.id, name: name?.trim() || 'Host', deckId: null, faction: null };
       lobby.started = false;
+      
+      // Create localtunnel if we don't have a public URL yet
+      if (!lobby.publicUrl) {
+        try {
+          console.log('Creating new localtunnel...');
+          const tunnel = await localtunnel({ port: 3000 });
+          lobby.publicUrl = tunnel.url;
+          lobby.tunnel = tunnel;
+          lobby.code = generateCode(tunnel.url);
+          console.log('Localtunnel created:', tunnel.url);
+          console.log('Join code:', lobby.code);
+          
+          // Register the code in the registry
+          try {
+            await fetch('https://astralia-card-game-registry.onrender.com/api/code', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: lobby.code, url: lobby.publicUrl })
+            });
+            console.log('Code registered in registry');
+          } catch (err) {
+            console.warn('Failed to register code:', err);
+          }
+        } catch (err) {
+          console.error('Localtunnel failed:', err);
+          socket.emit('lobby:error', 'Failed to create public tunnel');
+          return;
+        }
+      } else {
+        console.log('Tunnel already exists:', lobby.publicUrl);
+      }
+      
       emitState();
     });
 
@@ -70,11 +118,21 @@ function startServer() {
       const name = typeof payload === 'string' ? payload : payload?.name || 'Guest';
       const code = typeof payload === 'string' ? null : payload?.code;
       
-      if (!lobby.host || lobby.guest) return;
+      // Validate host exists
+      if (!lobby.host) {
+        socket.emit('lobby:joinError', 'No lobby is currently hosted. Please try again later.');
+        return;
+      }
+      
+      // Validate guest slot available
+      if (lobby.guest) {
+        socket.emit('lobby:joinError', 'This lobby is full.');
+        return;
+      }
       
       // Validate code if provided
       if (code && code !== lobby.code) {
-        socket.emit('lobby:joinError', 'Invalid join code');
+        socket.emit('lobby:joinError', 'Invalid join code.');
         return;
       }
       
@@ -104,11 +162,36 @@ function startServer() {
       emitState();
     });
 
-    socket.on('lobby:leave', () => {
+    socket.on('lobby:leave', async () => {
       if (lobby.host?.socketId === socket.id) {
         lobby.host = null;
         lobby.guest = null;
         lobby.started = false;
+        
+        // Unregister code from registry and close localtunnel
+        if (lobby.code) {
+          try {
+            await fetch(`https://astralia-card-game-registry.onrender.com/api/code/${lobby.code}`, {
+              method: 'DELETE'
+            });
+            console.log('Code unregistered from registry');
+          } catch (err) {
+            console.warn('Failed to unregister code:', err);
+          }
+        }
+        
+        if (lobby.tunnel) {
+          try {
+            await lobby.tunnel.close();
+            console.log('Localtunnel closed');
+          } catch (err) {
+            console.error('Failed to close localtunnel:', err);
+          }
+          lobby.tunnel = null;
+          lobby.publicUrl = null;
+          lobby.code = null;
+        }
+        
         emitState();
         return;
       }
@@ -126,15 +209,45 @@ function startServer() {
       io.emit('lobby:started', { hostDeckId: lobby.host.deckId, guestDeckId: lobby.guest.deckId });
     });
 
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+    socket.on('disconnect', async () => {
+      console.log('Client disconnected:', socket.id, '| was host?', lobby.host?.socketId === socket.id, '| was guest?', lobby.guest?.socketId === socket.id);
+      
       if (lobby.host?.socketId === socket.id) {
+        console.log('[Disconnect] Host left, cleaning up...');
         lobby.host = null;
         lobby.guest = null;
         lobby.started = false;
+        
+        // Unregister code from registry and close localtunnel
+        if (lobby.code) {
+          try {
+            await fetch(`https://astralia-card-game-registry.onrender.com/api/code/${lobby.code}`, {
+              method: 'DELETE'
+            });
+            console.log('[Disconnect] Code unregistered from registry');
+          } catch (err) {
+            console.warn('[Disconnect] Failed to unregister code:', err);
+          }
+        }
+        
+        if (lobby.tunnel) {
+          try {
+            await lobby.tunnel.close();
+            console.log('[Disconnect] Localtunnel closed');
+          } catch (err) {
+            console.error('[Disconnect] Failed to close localtunnel:', err);
+          }
+          lobby.tunnel = null;
+          lobby.publicUrl = null;
+          lobby.code = null;
+        }
       } else if (lobby.guest?.socketId === socket.id) {
+        console.log('[Disconnect] Guest left');
         lobby.guest = null;
+      } else {
+        console.log('[Disconnect] Socket was not host or guest');
       }
+      
       emitState();
     });
 
@@ -185,6 +298,41 @@ function createWindow() {
   console.log('[Electron] BrowserWindow created successfully');
 }
 
+// Cleanup function for when app is closing
+async function cleanup() {
+  console.log('[Cleanup] Starting cleanup...');
+  
+  // Unregister code from registry
+  if (lobby.code) {
+    try {
+      console.log('[Cleanup] Unregistering code:', lobby.code);
+      await fetch(`https://astralia-card-game-registry.onrender.com/api/code/${lobby.code}`, {
+        method: 'DELETE'
+      });
+      console.log('[Cleanup] Code unregistered');
+    } catch (err) {
+      console.warn('[Cleanup] Failed to unregister code:', err);
+    }
+  }
+  
+  // Close localtunnel
+  if (lobby.tunnel) {
+    try {
+      console.log('[Cleanup] Closing localtunnel...');
+      await lobby.tunnel.close();
+      console.log('[Cleanup] Localtunnel closed');
+    } catch (err) {
+      console.error('[Cleanup] Failed to close localtunnel:', err);
+    }
+  }
+  
+  // Close HTTP server
+  if (httpServer) {
+    httpServer.close();
+    console.log('[Cleanup] HTTP server closed');
+  }
+}
+
 // Start the server first
 startServer();
 
@@ -192,6 +340,16 @@ startServer();
 app.on('ready', () => {
   console.log('[Electron] App ready event');
   createWindow();
+});
+
+app.on('before-quit', async (event) => {
+  console.log('[Electron] Before quit event');
+  event.preventDefault(); // Prevent quit until cleanup is done
+  
+  await cleanup();
+  
+  // Now actually quit
+  process.exit(0);
 });
 
 app.on('window-all-closed', () => {

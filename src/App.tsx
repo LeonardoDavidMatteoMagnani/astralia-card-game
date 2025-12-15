@@ -9,12 +9,21 @@ function App() {
   const [name, setName] = useState("");
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinCode, setJoinCode] = useState("");
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("astralia.playerName");
       if (saved) setName(saved);
     } catch {}
+
+    const offError = gameConnection.onError((error) => {
+      setJoinError(error);
+    });
+
+    return () => {
+      offError();
+    };
   }, []);
 
   function ensureConnection() {
@@ -26,6 +35,7 @@ function App() {
     const chosen = name || "Host";
     try {
       localStorage.setItem("astralia.role", "host");
+      localStorage.removeItem("astralia.joinCode");
     } catch {}
     const off = gameConnection.runWhenConnected(() => {
       gameConnection.host(chosen);
@@ -34,27 +44,61 @@ function App() {
     void off;
   }
 
-  function joinGameWithCode() {
+  async function joinGameWithCode() {
     if (!joinCode.trim()) {
-      alert("Please enter a join code");
+      setJoinError("Please enter a join code");
       return;
     }
-    ensureConnection();
+
     const chosen = name || "Guest";
     try {
       localStorage.setItem("astralia.role", "guest");
       localStorage.setItem("astralia.joinCode", joinCode.trim());
     } catch {}
+
+    // Look up the code to find the host's server
+    const serverUrl = await gameConnection.lookupCode(joinCode.trim());
+    if (!serverUrl) {
+      setJoinError("Invalid join code. Could not find hosted lobby.");
+      return;
+    }
+
+    // Connect to the host's server
+    ensureConnection();
+    gameConnection.connect(joinCode.trim(), serverUrl);
+
+    let cleanup: (() => void) | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+
     const off = gameConnection.runWhenConnected(() => {
       gameConnection.join(chosen, joinCode.trim());
+
+      // Wait up to 3 seconds for successful join confirmation
+      timeoutId = setTimeout(() => {
+        if (cleanup) cleanup();
+        // If we're still in the modal after 3 seconds, the join failed
+        setJoinError("Join request timed out. Please try again.");
+      }, 3000);
     });
-    navigate("/lobby");
-    setShowJoinModal(false);
-    void off;
+
+    cleanup = gameConnection.onState((state) => {
+      // Check if we're the guest in the lobby
+      if (
+        state.guest?.name === chosen &&
+        state.guest?.socketId === gameConnection.getSocketId()
+      ) {
+        if (timeoutId) clearTimeout(timeoutId);
+        cleanup?.();
+        off();
+        navigate("/lobby");
+        setShowJoinModal(false);
+      }
+    });
   }
 
   function openJoinModal() {
     setJoinCode("");
+    setJoinError(null);
     setShowJoinModal(true);
   }
 
@@ -124,6 +168,21 @@ function App() {
             </div>
             <div className={styles.modalContent}>
               <p>Enter the join code from the host:</p>
+              {joinError && (
+                <div
+                  style={{
+                    background: "rgba(255, 100, 100, 0.2)",
+                    border: "1px solid rgba(255, 100, 100, 0.5)",
+                    color: "#ff6464",
+                    padding: "0.75rem",
+                    borderRadius: "6px",
+                    fontSize: "0.9rem",
+                    marginBottom: "1rem",
+                  }}
+                >
+                  {joinError}
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Enter join code"

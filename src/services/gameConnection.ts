@@ -15,24 +15,28 @@ export interface LobbyState {
 }
 
 type Listener = (state: LobbyState) => void;
+type ErrorListener = (error: string) => void;
 
 class GameConnection {
   private socket: Socket | null = null;
   private listeners: Set<Listener> = new Set();
   private connectListeners: Set<() => void> = new Set();
   private disconnectListeners: Set<() => void> = new Set();
-  private customServerUrl: string | null = null;
+  private errorListeners: Set<ErrorListener> = new Set();
+  private registryUrl = 'https://astralia-card-game-registry.onrender.com'; // simple registry service
 
-  connect(joinCode?: string) {
+  connect(joinCode?: string, serverUrl?: string) {
     if (this.socket) return;
     
     let url: string | undefined;
     
-    if (joinCode) {
-      // Connect to a code-based server (host's IP:port)
-      // For now, assume local network: localhost:3000 with code validation on server
-      // In production, this would resolve the code to an actual IP/hostname
-      url = 'http://localhost:3000';
+    if (serverUrl) {
+      // Direct server URL provided (for custom/local servers)
+      url = serverUrl;
+    } else if (joinCode) {
+      // For production guests: look up code in registry to find host's tunnel URL
+      // This will be handled in the join() method instead
+      url = 'http://localhost:3000'; // fallback for local testing
     } else {
       // Default: connect to own localhost (hosting mode)
       const isProd = (import.meta as any).env?.PROD;
@@ -46,6 +50,9 @@ class GameConnection {
     this.socket.on('lobby:state', (state: LobbyState) => {
       this.listeners.forEach((l) => l(state));
     });
+    this.socket.on('lobby:joinError', (error: string) => {
+      this.errorListeners.forEach((l) => l(error));
+    });
     this.socket.on('disconnect', () => {
       this.disconnectListeners.forEach((l) => l());
     });
@@ -54,6 +61,11 @@ class GameConnection {
   onState(listener: Listener) {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  onError(listener: ErrorListener) {
+    this.errorListeners.add(listener);
+    return () => this.errorListeners.delete(listener);
   }
 
   getSocketId(): string | null {
@@ -95,6 +107,19 @@ class GameConnection {
     this.socket?.emit('lobby:host', name);
   }
   
+  async lookupCode(code: string): Promise<string | null> {
+    try {
+      const res = await fetch(`${this.registryUrl}/api/code/${code}`);
+      if (res.ok) {
+        const data = await res.json();
+        return data.url;
+      }
+    } catch (err) {
+      console.error('Failed to look up code:', err);
+    }
+    return null;
+  }
+
   join(name: string, joinCode?: string) {
     this.socket?.emit('lobby:join', { name, code: joinCode || null });
   }
