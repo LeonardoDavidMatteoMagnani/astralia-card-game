@@ -7,6 +7,8 @@ import { gameConnection } from "./services/gameConnection";
 function App() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
 
   useEffect(() => {
     try {
@@ -32,17 +34,28 @@ function App() {
     void off;
   }
 
-  function joinGame() {
+  function joinGameWithCode() {
+    if (!joinCode.trim()) {
+      alert("Please enter a join code");
+      return;
+    }
     ensureConnection();
     const chosen = name || "Guest";
     try {
       localStorage.setItem("astralia.role", "guest");
+      localStorage.setItem("astralia.joinCode", joinCode.trim());
     } catch {}
     const off = gameConnection.runWhenConnected(() => {
-      gameConnection.join(chosen);
+      gameConnection.join(chosen, joinCode.trim());
     });
     navigate("/lobby");
+    setShowJoinModal(false);
     void off;
+  }
+
+  function openJoinModal() {
+    setJoinCode("");
+    setShowJoinModal(true);
   }
 
   return (
@@ -63,7 +76,7 @@ function App() {
           }}
           className={styles.nameInput}
         />
-        <button className={styles.playButton} onClick={joinGame}>
+        <button className={styles.playButton} onClick={openJoinModal}>
           join game
         </button>
         <button className={styles.playButton} onClick={hostGame}>
@@ -93,6 +106,42 @@ function App() {
           rules
         </button>
       </div>
+
+      {showJoinModal && (
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setShowJoinModal(false)}
+        >
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Join Game</h2>
+              <button
+                className={styles.closeButton}
+                onClick={() => setShowJoinModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalContent}>
+              <p>Enter the join code from the host:</p>
+              <input
+                type="text"
+                placeholder="Enter join code"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                className={styles.codeInput}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") joinGameWithCode();
+                }}
+              />
+              <button className={styles.playButton} onClick={joinGameWithCode}>
+                Join
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

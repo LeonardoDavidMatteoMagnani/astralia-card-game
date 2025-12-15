@@ -410,6 +410,29 @@ export default function LobbyPage() {
               }}
             >
               <div style={{ opacity: 0.7 }}>Waiting for opponent to join…</div>
+              {meRole === "host" && state.code && (
+                <div style={{ marginTop: "1rem", textAlign: "center" }}>
+                  <div style={{ fontSize: "0.85rem", opacity: 0.6 }}>
+                    Join code:
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "2rem",
+                      fontWeight: "bold",
+                      letterSpacing: "0.2em",
+                      fontFamily: "monospace",
+                      color: "#e676ad",
+                      marginTop: "0.5rem",
+                      padding: "1rem",
+                      background: "rgba(230, 118, 173, 0.1)",
+                      borderRadius: "8px",
+                      border: "2px solid rgba(230, 118, 173, 0.3)",
+                    }}
+                  >
+                    {state.code}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

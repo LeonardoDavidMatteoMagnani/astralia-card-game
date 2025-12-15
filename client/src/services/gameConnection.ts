@@ -11,6 +11,7 @@ export interface LobbyState {
   host: LobbyPlayerState | null;
   guest: LobbyPlayerState | null;
   started: boolean;
+  code?: string;
 }
 
 type Listener = (state: LobbyState) => void;
@@ -20,11 +21,24 @@ class GameConnection {
   private listeners: Set<Listener> = new Set();
   private connectListeners: Set<() => void> = new Set();
   private disconnectListeners: Set<() => void> = new Set();
+  private customServerUrl: string | null = null;
 
-  connect() {
+  connect(joinCode?: string) {
     if (this.socket) return;
-    const isProd = (import.meta as any).env?.PROD;
-    const url = isProd ? undefined : 'http://localhost:3000';
+    
+    let url: string | undefined;
+    
+    if (joinCode) {
+      // Connect to a code-based server (host's IP:port)
+      // For now, assume local network: localhost:3000 with code validation on server
+      // In production, this would resolve the code to an actual IP/hostname
+      url = 'http://localhost:3000';
+    } else {
+      // Default: connect to own localhost (hosting mode)
+      const isProd = (import.meta as any).env?.PROD;
+      url = isProd ? undefined : 'http://localhost:3000';
+    }
+    
     this.socket = io(url ?? '/', { autoConnect: true, withCredentials: false });
     this.socket.on('connect', () => {
       this.connectListeners.forEach((l) => l());
@@ -80,8 +94,9 @@ class GameConnection {
   host(name: string) {
     this.socket?.emit('lobby:host', name);
   }
-  join(name: string) {
-    this.socket?.emit('lobby:join', name);
+  
+  join(name: string, joinCode?: string) {
+    this.socket?.emit('lobby:join', { name, code: joinCode || null });
   }
   setName(name: string) {
     this.socket?.emit('lobby:setName', name);
