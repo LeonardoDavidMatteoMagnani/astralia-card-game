@@ -8,6 +8,7 @@ server/dist/
 dist/
 dist-ssr/
 build/
+release-builds/
 
 # Vite / dev
 .vite/

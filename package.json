@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "concurrently --kill-others \"vite\" \"node ./run-electron-dev.js\"",
     "dev:web": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && electron-packager . --overwrite --asar --platform=win32 --arch=x64 --out=release-builds",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -33,6 +33,8 @@
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
     "electron": "^30.0.0",
+    "electron-builder": "^25.1.6",
+    "electron-packager": "^17.1.2",
     "eslint": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.22",

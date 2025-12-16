@@ -274,17 +274,17 @@ function createWindow() {
   mainWindow.maximize();
 
   const isDev = !!process.env.ELECTRON_DEV;
-  const url = isDev ? 'http://localhost:5173' : `file://${path.join(__dirname, 'dist', 'index.html')}`;
+  const url = isDev ? 'http://localhost:5173' : 'http://localhost:3000';
   console.log(`[Electron] Loading URL: ${url}`);
   
   mainWindow.loadURL(url).catch(err => {
     console.error('[Electron] Failed to load URL:', err);
   });
 
-  if (isDev) {
+  /*if (isDev) {
     console.log('[Electron] Opening DevTools');
     mainWindow.webContents.openDevTools();
-  }
+  }*/
 
   mainWindow.on('closed', () => {
     console.log('[Electron] Window closed');
