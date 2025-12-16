@@ -213,9 +213,9 @@ function startServer() {
             await fetch(`https://astralia-card-game-registry.onrender.com/api/code/${lobby.code}`, {
               method: 'DELETE'
             });
-            console.log('[Disconnect] Code unregistered from registry');
+            console.log(`[Disconnect] Code ${lobby.code} unregistered from registry`);
           } catch (err) {
-            console.warn('[Disconnect] Failed to unregister code:', err);
+            console.warn(`[Disconnect] Failed to unregister code ${lobby.code}:`, err);
           }
         }
         
@@ -322,9 +322,9 @@ async function cleanup() {
       await fetch(`https://astralia-card-game-registry.onrender.com/api/code/${lobby.code}`, {
         method: 'DELETE'
       });
-      console.log('[Cleanup] Code unregistered');
+      console.log(`[Cleanup] Code ${lobby.code} unregistered from registry`);
     } catch (err) {
-      console.warn('[Cleanup] Failed to unregister code:', err);
+      console.warn(`[Cleanup] Failed to unregister code ${lobby.code}:`, err);
     }
   }
   
