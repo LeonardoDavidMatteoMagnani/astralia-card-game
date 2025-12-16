@@ -142,7 +142,12 @@ export default function LobbyPage() {
     const offConn = gameConnection.onConnect(() =>
       setMyId(gameConnection.getSocketId())
     );
-    const offDisc = gameConnection.onDisconnect(() => setMyId(null));
+    const offDisc = gameConnection.onDisconnect(() => {
+      setMyId(null);
+      try {
+        sessionStorage.removeItem("astralia.hostEmitted");
+      } catch {}
+    });
     return () => {
       off();
       offConn();
@@ -291,20 +296,28 @@ export default function LobbyPage() {
         return "";
       }
     })();
-    if (savedRole === "host") {
-      if (!state.host) {
-        gameConnection.runWhenConnected(() =>
-          gameConnection.host(savedName || "Host")
-        );
-        setReattempted(true);
+    const hostEmitted = (() => {
+      try {
+        return sessionStorage.getItem("astralia.hostEmitted");
+      } catch {
+        return null;
       }
-    } else if (savedRole === "guest") {
-      if (state.host && !state.guest) {
-        gameConnection.runWhenConnected(() =>
-          gameConnection.join(savedName || "Guest")
-        );
-        setReattempted(true);
-      }
+    })();
+
+    // Only retry if we have no host (page reload) and we're supposed to be host
+    // Don't retry if we already emitted in this session (initial navigation from App.tsx)
+    if (savedRole === "host" && !state.host && !hostEmitted) {
+      gameConnection.runWhenConnected(() =>
+        gameConnection.host(savedName || "Host")
+      );
+      setReattempted(true);
+    } else if (savedRole === "guest" && state.host && !state.guest) {
+      gameConnection.runWhenConnected(() =>
+        gameConnection.join(savedName || "Guest")
+      );
+      setReattempted(true);
+    } else {
+      setReattempted(true);
     }
   }, [myId, meRole, state.host, state.guest, reattempted]);
 
