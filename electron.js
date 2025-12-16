@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -64,9 +64,17 @@ function startServer() {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
   }
+  
+  // Remove the app menu (hides menu bar and File/Edit/View menus)
+  if (!isDev) {
+    Menu.setApplicationMenu(null);
+  }
 
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id);
+    
+    // Track which socket is the host/guest when they join
+    let clientRole = null; // 'host', 'guest', or null
 
     socket.on('lobby:host', async (name) => {
       console.log('lobby:host received from', socket.id, '| current host:', lobby.host?.socketId);
@@ -77,6 +85,7 @@ function startServer() {
       
       // Set host immediately to prevent race conditions
       lobby.host = { socketId: socket.id, name: name?.trim() || 'Host', deckId: null, faction: null };
+      clientRole = 'host'; // Track this socket as host
       lobby.started = false;
       
       // Create localtunnel if we don't have a public URL yet
@@ -137,6 +146,7 @@ function startServer() {
       }
       
       lobby.guest = { socketId: socket.id, name: name.trim() || 'Guest', deckId: null, faction: null };
+      clientRole = 'guest'; // Track this socket as guest
       emitState();
     });
 
@@ -163,39 +173,18 @@ function startServer() {
     });
 
     socket.on('lobby:leave', async () => {
-      if (lobby.host?.socketId === socket.id) {
+      console.log('lobby:leave received from', socket.id, '| is host?', clientRole === 'host');
+      if (clientRole === 'host') {
+        console.log('[Leave] Host leaving, clearing lobby state...');
         lobby.host = null;
         lobby.guest = null;
         lobby.started = false;
-        
-        // Unregister code from registry and close localtunnel
-        if (lobby.code) {
-          try {
-            await fetch(`https://astralia-card-game-registry.onrender.com/api/code/${lobby.code}`, {
-              method: 'DELETE'
-            });
-            console.log('Code unregistered from registry');
-          } catch (err) {
-            console.warn('Failed to unregister code:', err);
-          }
-        }
-        
-        if (lobby.tunnel) {
-          try {
-            await lobby.tunnel.close();
-            console.log('Localtunnel closed');
-          } catch (err) {
-            console.error('Failed to close localtunnel:', err);
-          }
-          lobby.tunnel = null;
-          lobby.publicUrl = null;
-          lobby.code = null;
-        }
-        
+        // Tunnel cleanup happens in disconnect handler
         emitState();
         return;
       }
-      if (lobby.guest?.socketId === socket.id) {
+      if (clientRole === 'guest') {
+        console.log('[Leave] Guest leaving');
         lobby.guest = null;
         emitState();
       }
@@ -210,9 +199,9 @@ function startServer() {
     });
 
     socket.on('disconnect', async () => {
-      console.log('Client disconnected:', socket.id, '| was host?', lobby.host?.socketId === socket.id, '| was guest?', lobby.guest?.socketId === socket.id);
+      console.log('Client disconnected:', socket.id, '| was host?', clientRole === 'host', '| was guest?', clientRole === 'guest');
       
-      if (lobby.host?.socketId === socket.id) {
+      if (clientRole === 'host') {
         console.log('[Disconnect] Host left, cleaning up...');
         lobby.host = null;
         lobby.guest = null;
@@ -241,7 +230,7 @@ function startServer() {
           lobby.publicUrl = null;
           lobby.code = null;
         }
-      } else if (lobby.guest?.socketId === socket.id) {
+      } else if (clientRole === 'guest') {
         console.log('[Disconnect] Guest left');
         lobby.guest = null;
       } else {
@@ -264,9 +253,11 @@ function createWindow() {
   console.log('[Electron] Creating BrowserWindow');
   mainWindow = new BrowserWindow({
     fullscreen: false,
+    show: false,
     webPreferences: {
       preload: undefined,
       nodeIntegration: false,
+      sandbox: true,
     },
   });
 
@@ -281,10 +272,32 @@ function createWindow() {
     console.error('[Electron] Failed to load URL:', err);
   });
 
-  /*if (isDev) {
-    console.log('[Electron] Opening DevTools');
-    mainWindow.webContents.openDevTools();
-  }*/
+  // Only disable refresh and dev tools in production
+  if (!isDev) {
+    // Disable refresh shortcuts (F5, Ctrl+R, Ctrl+Shift+R)
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      if (
+        input.control && input.key.toLowerCase() === 'r' ||
+        input.key === 'F5' ||
+        (input.control && input.shift && input.key.toLowerCase() === 'r')
+      ) {
+        event.preventDefault();
+      }
+      // Also block Dev Tools (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C)
+      if (
+        input.key === 'F12' ||
+        (input.control && input.shift && input.key.toLowerCase() === 'i') ||
+        (input.control && input.shift && input.key.toLowerCase() === 'j') ||
+        (input.control && input.shift && input.key.toLowerCase() === 'c')
+      ) {
+        event.preventDefault();
+      }
+    });
+  } else {
+    // In dev mode, open dev tools
+    //console.log('[Electron] Opening DevTools');
+    //mainWindow.webContents.openDevTools();
+  }
 
   mainWindow.on('closed', () => {
     console.log('[Electron] Window closed');

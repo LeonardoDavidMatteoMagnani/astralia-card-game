@@ -24,6 +24,7 @@ class GameConnection {
   private disconnectListeners: Set<() => void> = new Set();
   private errorListeners: Set<ErrorListener> = new Set();
   private registryUrl = 'https://astralia-card-game-registry.onrender.com'; // simple registry service
+  private hostEmitted = false; // Prevent duplicate host emissions in same session
 
   connect(joinCode?: string, serverUrl?: string) {
     if (this.socket) return;
@@ -100,10 +101,16 @@ class GameConnection {
     } finally {
       this.disconnectListeners.forEach((l) => l());
       this.socket = null;
+      this.hostEmitted = false; // Reset flag on disconnect
     }
   }
 
   host(name: string) {
+    if (this.hostEmitted) {
+      console.log('[GameConnection] Host already emitted in this session, skipping');
+      return;
+    }
+    this.hostEmitted = true;
     this.socket?.emit('lobby:host', name);
   }
   

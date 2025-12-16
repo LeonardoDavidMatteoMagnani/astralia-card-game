@@ -36,7 +36,6 @@ function App() {
     try {
       localStorage.setItem("astralia.role", "host");
       localStorage.removeItem("astralia.joinCode");
-      sessionStorage.setItem("astralia.hostEmitted", "true");
     } catch {}
     const off = gameConnection.runWhenConnected(() => {
       gameConnection.host(chosen);

@@ -144,9 +144,6 @@ export default function LobbyPage() {
     );
     const offDisc = gameConnection.onDisconnect(() => {
       setMyId(null);
-      try {
-        sessionStorage.removeItem("astralia.hostEmitted");
-      } catch {}
     });
     return () => {
       off();
@@ -296,17 +293,10 @@ export default function LobbyPage() {
         return "";
       }
     })();
-    const hostEmitted = (() => {
-      try {
-        return sessionStorage.getItem("astralia.hostEmitted");
-      } catch {
-        return null;
-      }
-    })();
 
     // Only retry if we have no host (page reload) and we're supposed to be host
-    // Don't retry if we already emitted in this session (initial navigation from App.tsx)
-    if (savedRole === "host" && !state.host && !hostEmitted) {
+    // gameConnection.host() has built-in duplicate prevention
+    if (savedRole === "host" && !state.host) {
       gameConnection.runWhenConnected(() =>
         gameConnection.host(savedName || "Host")
       );
