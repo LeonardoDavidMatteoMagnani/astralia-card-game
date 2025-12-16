@@ -1,27 +1,25 @@
-import { useState } from "react";
 import type { Deck } from "../types/Deck";
-import DeckCreationModal from "./DeckCreationModal.tsx";
 import styles from "./DeckCard.module.scss";
 
 interface DeckCardProps {
   deck?: Deck;
   isAddButton?: boolean;
-  onAddSaved?: (deck: Deck) => void;
-  onEdit?: (deck: Deck) => void;
+  onAdd?: () => void;
+  onClick?: (deck: Deck) => void;
   onDelete?: (deck: Deck) => void;
   onShare?: (deck: Deck) => void;
+  showActions?: boolean;
 }
 
 export default function DeckCard({
   deck,
   isAddButton,
-  onAddSaved,
-  onEdit,
+  onAdd,
+  onClick,
   onDelete,
   onShare,
+  showActions = true,
 }: DeckCardProps) {
-  const [showModal, setShowModal] = useState(false);
-
   const factionMap: Record<string, string> = {
     red: styles.factionRed,
     blue: styles.factionBlue,
@@ -36,9 +34,9 @@ export default function DeckCard({
 
   const handleClick = () => {
     if (isAddButton) {
-      setShowModal(true);
+      onAdd?.();
     } else if (deck) {
-      onEdit?.(deck);
+      onClick?.(deck);
     }
   };
 
@@ -68,39 +66,31 @@ export default function DeckCard({
             <div className={styles.cardTitle}>
               {deck?.name || "Unnamed Deck"}
             </div>
-            <div className={styles.actions}>
-              <button
-                className={`${styles.action} ${styles.primary}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deck && onShare?.(deck);
-                }}
-              >
-                Share
-              </button>
-              <button
-                className={`${styles.action} ${styles.danger}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deck && onDelete?.(deck);
-                }}
-              >
-                Delete
-              </button>
-            </div>
+            {showActions && (
+              <div className={styles.actions}>
+                <button
+                  className={`${styles.action} ${styles.primary}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deck && onShare?.(deck);
+                  }}
+                >
+                  Share
+                </button>
+                <button
+                  className={`${styles.action} ${styles.danger}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deck && onDelete?.(deck);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
-
-      {showModal && (
-        <DeckCreationModal
-          onClose={() => setShowModal(false)}
-          onSaved={(d) => {
-            setShowModal(false);
-            onAddSaved?.(d);
-          }}
-        />
-      )}
     </>
   );
 }

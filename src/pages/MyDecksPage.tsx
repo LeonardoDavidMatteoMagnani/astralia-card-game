@@ -9,6 +9,7 @@ import {
   createDeck,
 } from "../services/deckService";
 import DeckCreationModal from "../components/DeckCreationModal";
+import FactionSelectionModal from "../components/FactionSelectionModal";
 import ModalDialog from "../components/ModalDialog";
 import styles from "./MyDecksPage.module.scss";
 import modalStyles from "../components/ModalDialog.module.scss";
@@ -17,6 +18,7 @@ import { Link } from "react-router-dom";
 export default function MyDecksPage() {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
+  const [showFactionSelection, setShowFactionSelection] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [importCode, setImportCode] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
@@ -107,7 +109,7 @@ export default function MyDecksPage() {
           <DeckCard
             key={d.id}
             deck={d}
-            onEdit={(deck) => setEditingDeck(deck)}
+            onClick={(deck) => setEditingDeck(deck)}
             onDelete={(deck) => {
               setDeckToDelete(deck);
               setShowDelete(true);
@@ -115,7 +117,7 @@ export default function MyDecksPage() {
             onShare={handleShare}
           />
         ))}
-        <DeckCard isAddButton onAddSaved={() => refresh()} />
+        <DeckCard isAddButton onAdd={() => setShowFactionSelection(true)} />
       </div>
 
       {editingDeck && (
@@ -125,6 +127,19 @@ export default function MyDecksPage() {
           onSaved={() => {
             setEditingDeck(null);
             refresh();
+          }}
+          selectedFaction={editingDeck.faction}
+        />
+      )}
+
+      {showFactionSelection && !editingDeck && (
+        <FactionSelectionModal
+          onSelect={(faction) => {
+            setShowFactionSelection(false);
+            setEditingDeck({ id: "temp", faction } as Deck);
+          }}
+          onClose={() => {
+            setShowFactionSelection(false);
           }}
         />
       )}

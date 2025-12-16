@@ -19,6 +19,8 @@ const CardDisplay: React.FC<CardDisplayProps> = ({
   const [backFace, setBackFace] = useState<Card | null>(null);
 
   useEffect(() => {
+    setCurrentFace(card);
+    setBackFace(null);
     (async () => {
       if (!enableFlip) return;
       const { back } = await getCardFaces(card.id);

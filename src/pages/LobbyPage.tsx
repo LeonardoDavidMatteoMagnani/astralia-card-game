@@ -2,18 +2,20 @@ import { useState } from "react";
 import styles from "./LobbyPage.module.scss";
 import { gameConnection } from "../services/gameConnection";
 import { useNavigate } from "react-router-dom";
-import FactionDeckSelectModal from "../components/FactionDeckSelectModal";
 import PlayerPanel from "../components/PlayerPanel";
 import { useLobbyConnection } from "../hooks/useLobbyConnection";
 import { usePlayerRole } from "../hooks/usePlayerRole";
 import { useSyncPlayerName } from "../hooks/useSyncPlayerName";
+import FactionSelectionModal from "../components/FactionSelectionModal";
+import DeckSelectionModal from "../components/DeckSelectionModal";
 
 export default function LobbyPage() {
   const navigate = useNavigate();
   const [selectingFor, setSelectingFor] = useState<"host" | "guest" | null>(
     null
   );
-  const [tempFaction, setTempFaction] = useState<string | null>(null);
+  const [selectedFaction, setSelectedFaction] = useState<string | null>(null);
+  const [showFactionSelection, setShowFactionSelection] = useState(false);
 
   // Connection and state management
   const { state, myId } = useLobbyConnection();
@@ -31,17 +33,7 @@ export default function LobbyPage() {
 
   function openSelect(role: "host" | "guest") {
     setSelectingFor(role);
-    setTempFaction(
-      role === "host"
-        ? state.host?.faction || null
-        : state.guest?.faction || null
-    );
-  }
-
-  function confirmDeck(deckId: string) {
-    if (!meRole || meRole !== selectingFor) return;
-    gameConnection.setFaction(tempFaction);
-    gameConnection.setDeck(deckId);
+    setShowFactionSelection(true);
   }
 
   function start() {
@@ -99,16 +91,33 @@ export default function LobbyPage() {
         />
       </div>
 
-      <FactionDeckSelectModal
-        open={selectingFor !== null}
-        onClose={() => {
-          setSelectingFor(null);
-          setTempFaction(null);
-        }}
-        faction={tempFaction}
-        onFactionChange={setTempFaction}
-        onPickDeck={confirmDeck}
-      />
+      {showFactionSelection && (
+        <FactionSelectionModal
+          onSelect={(faction) => {
+            setSelectedFaction(faction);
+            setShowFactionSelection(false);
+          }}
+          onClose={() => {
+            setShowFactionSelection(false);
+            setSelectingFor(null);
+          }}
+        />
+      )}
+
+      {selectedFaction && selectingFor && (
+        <DeckSelectionModal
+          faction={selectedFaction}
+          onSelectDeck={(deckId) => {
+            gameConnection.setDeck(deckId);
+            setSelectedFaction(null);
+            setSelectingFor(null);
+          }}
+          onClose={() => {
+            setSelectedFaction(null);
+            setSelectingFor(null);
+          }}
+        />
+      )}
     </div>
   );
 }

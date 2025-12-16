@@ -7,16 +7,14 @@ import { createDeck, updateDeck } from "../services/deckService";
 import CardDisplay from "./CardDisplay";
 import CardDetailsModal from "./CardDetailsModal";
 import CardFilters from "./CardFilters";
-import FactionSelection from "./FactionSelection";
 import styles from "./DeckCreationModal.module.scss";
 
 interface DeckCreationModalProps {
   onClose: () => void;
   initialDeck?: Deck;
   onSaved?: (deck: Deck) => void;
+  selectedFaction: string;
 }
-
-const factions = ["red", "blue", "green", "purple", "pink"];
 
 type SectionKey = "protagonist" | "persona" | "deck";
 
@@ -29,10 +27,8 @@ export default function DeckCreationModal({
   onClose,
   initialDeck,
   onSaved,
+  selectedFaction,
 }: DeckCreationModalProps) {
-  const [selectedFaction, setSelectedFaction] = useState<string | null>(
-    initialDeck?.faction ?? null
-  );
   const [deckName, setDeckName] = useState<string>(
     initialDeck?.name ?? "New Deck"
   );
@@ -447,7 +443,7 @@ export default function DeckCreationModal({
     }));
     return {
       name: deckName.trim() || "New Deck",
-      faction: selectedFaction || "red",
+      faction: selectedFaction as string,
       protagonist: protagonistSelection?.card.id ?? null,
       persona: personaIds,
       deck: deckEntries,
@@ -483,233 +479,225 @@ export default function DeckCreationModal({
           <CardDetailsModal card={detailCard} onClose={closeCardDetails} />
         )}
 
-        {!selectedFaction ? (
-          <FactionSelection factions={factions} onSelect={setSelectedFaction} />
-        ) : (
-          <>
-            {(() => {
-              const cap =
-                (selectedFaction || "").charAt(0).toUpperCase() +
-                (selectedFaction || "").slice(1);
-              const factionClass =
-                (styles[
-                  `factionHeader${cap}` as keyof typeof styles
-                ] as string) || "";
-              return (
-                <div className={`${styles.modalHeader} ${factionClass}`}>
-                  <h2 className={styles.modalTitle}>
-                    {selectedFaction.toUpperCase()} Deck Builder
-                  </h2>
-                  <div className={styles.headerActions}>
-                    <button
-                      className={styles.closeButton}
-                      onClick={onClose}
-                      aria-label="Close"
-                    >
-                      ✕
-                    </button>
-                  </div>
+        <>
+          {(() => {
+            const cap =
+              (selectedFaction || "").charAt(0).toUpperCase() +
+              (selectedFaction || "").slice(1);
+            const factionClass =
+              (styles[
+                `factionHeader${cap}` as keyof typeof styles
+              ] as string) || "";
+            return (
+              <div className={`${styles.modalHeader} ${factionClass}`}>
+                <h2 className={styles.modalTitle}>
+                  {selectedFaction.toUpperCase()} Deck Builder
+                </h2>
+                <div className={styles.headerActions}>
+                  <button
+                    className={styles.closeButton}
+                    onClick={onClose}
+                    aria-label="Close"
+                  >
+                    ✕
+                  </button>
                 </div>
-              );
-            })()}
+              </div>
+            );
+          })()}
 
-            <div className={styles.editorHeader}>
-              <div className={styles.headerLeft}>
-                <input
-                  value={deckName}
-                  onChange={(e) => setDeckName(e.target.value)}
-                  placeholder="Deck name"
-                  className={styles.deckNameInput}
-                />
-                <input
-                  id="deck-bg-input"
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () =>
-                      setBackgroundImage(String(reader.result));
-                    reader.readAsDataURL(file);
-                    e.currentTarget.value = "";
-                  }}
-                />
+          <div className={styles.editorHeader}>
+            <div className={styles.headerLeft}>
+              <input
+                value={deckName}
+                onChange={(e) => setDeckName(e.target.value)}
+                placeholder="Deck name"
+                className={styles.deckNameInput}
+              />
+              <input
+                id="deck-bg-input"
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () =>
+                    setBackgroundImage(String(reader.result));
+                  reader.readAsDataURL(file);
+                  e.currentTarget.value = "";
+                }}
+              />
+              <button
+                className={styles.editButton}
+                onClick={() =>
+                  document.getElementById("deck-bg-input")?.click()
+                }
+              >
+                Set Background
+              </button>
+              {backgroundImage && (
                 <button
                   className={styles.editButton}
-                  onClick={() =>
-                    document.getElementById("deck-bg-input")?.click()
-                  }
+                  onClick={() => setBackgroundImage(null)}
                 >
-                  Set Background
+                  Remove Background
                 </button>
-                {backgroundImage && (
-                  <button
-                    className={styles.editButton}
-                    onClick={() => setBackgroundImage(null)}
-                  >
-                    Remove Background
-                  </button>
-                )}
-              </div>
+              )}
+            </div>
 
-              <div className={styles.headerActions}>
-                <button className={styles.editButton} onClick={handleSave}>
-                  Save Deck
+            <div className={styles.headerActions}>
+              <button className={styles.editButton} onClick={handleSave}>
+                Save Deck
+              </button>
+            </div>
+          </div>
+
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h3>
+                Protagonist
+                <span className={styles.sectionCount}>
+                  {protagonistSelection ? protagonistSelection.qty : 0}/
+                  {sectionLimits.protagonist}
+                </span>
+              </h3>
+              <div>
+                <button
+                  className={styles.editButton}
+                  onClick={() => toggleEdit("protagonist")}
+                >
+                  {editing.protagonist ? "Done" : "Edit"}
                 </button>
               </div>
             </div>
 
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h3>
-                  Protagonist
-                  <span className={styles.sectionCount}>
-                    {protagonistSelection ? protagonistSelection.qty : 0}/
-                    {sectionLimits.protagonist}
-                  </span>
-                </h3>
-                <div>
-                  <button
-                    className={styles.editButton}
-                    onClick={() => toggleEdit("protagonist")}
-                  >
-                    {editing.protagonist ? "Done" : "Edit"}
-                  </button>
-                </div>
-              </div>
+            <div className={styles.sectionBody}>
+              {editing.protagonist ? (
+                <>
+                  <CardFilters
+                    options={protagonistOptions}
+                    searchText={protagonistFilters.searchText}
+                    setSearchText={protagonistFilters.setSearchText}
+                    selectedCosts={protagonistFilters.selectedCosts}
+                    setSelectedCosts={protagonistFilters.setSelectedCosts}
+                    selectedTypes={protagonistFilters.selectedTypes}
+                    setSelectedTypes={protagonistFilters.setSelectedTypes}
+                    selectedSubtypes={protagonistFilters.selectedSubtypes}
+                    setSelectedSubtypes={protagonistFilters.setSelectedSubtypes}
+                    selectedKeywords={protagonistFilters.selectedKeywords}
+                    setSelectedKeywords={protagonistFilters.setSelectedKeywords}
+                    selectedAtks={protagonistFilters.selectedAtks}
+                    setSelectedAtks={protagonistFilters.setSelectedAtks}
+                    selectedHps={protagonistFilters.selectedHps}
+                    setSelectedHps={protagonistFilters.setSelectedHps}
+                    clearFilters={protagonistFilters.clearFilters}
+                    hideTypeFilter
+                  />
+                  {renderEditGrid("protagonist")}
+                </>
+              ) : (
+                renderSelectedList("protagonist")
+              )}
+            </div>
+          </section>
 
-              <div className={styles.sectionBody}>
-                {editing.protagonist ? (
-                  <>
-                    <CardFilters
-                      options={protagonistOptions}
-                      searchText={protagonistFilters.searchText}
-                      setSearchText={protagonistFilters.setSearchText}
-                      selectedCosts={protagonistFilters.selectedCosts}
-                      setSelectedCosts={protagonistFilters.setSelectedCosts}
-                      selectedTypes={protagonistFilters.selectedTypes}
-                      setSelectedTypes={protagonistFilters.setSelectedTypes}
-                      selectedSubtypes={protagonistFilters.selectedSubtypes}
-                      setSelectedSubtypes={
-                        protagonistFilters.setSelectedSubtypes
-                      }
-                      selectedKeywords={protagonistFilters.selectedKeywords}
-                      setSelectedKeywords={
-                        protagonistFilters.setSelectedKeywords
-                      }
-                      selectedAtks={protagonistFilters.selectedAtks}
-                      setSelectedAtks={protagonistFilters.setSelectedAtks}
-                      selectedHps={protagonistFilters.selectedHps}
-                      setSelectedHps={protagonistFilters.setSelectedHps}
-                      clearFilters={protagonistFilters.clearFilters}
-                      hideTypeFilter
-                    />
-                    {renderEditGrid("protagonist")}
-                  </>
-                ) : (
-                  renderSelectedList("protagonist")
-                )}
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h3>
+                Persona Cards
+                <span className={styles.sectionCount}>
+                  {getTotalInMap(personaSelectionMap)}/{sectionLimits.persona}
+                </span>
+              </h3>
+              <div>
+                <button
+                  className={styles.editButton}
+                  onClick={() => toggleEdit("persona")}
+                >
+                  {editing.persona ? "Done" : "Edit"}
+                </button>
               </div>
-            </section>
+            </div>
 
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h3>
-                  Persona Cards
-                  <span className={styles.sectionCount}>
-                    {getTotalInMap(personaSelectionMap)}/{sectionLimits.persona}
-                  </span>
-                </h3>
-                <div>
-                  <button
-                    className={styles.editButton}
-                    onClick={() => toggleEdit("persona")}
-                  >
-                    {editing.persona ? "Done" : "Edit"}
-                  </button>
-                </div>
+            <div className={styles.sectionBody}>
+              {editing.persona ? (
+                <>
+                  <CardFilters
+                    options={personaOptions}
+                    searchText={personaFilters.searchText}
+                    setSearchText={personaFilters.setSearchText}
+                    selectedCosts={personaFilters.selectedCosts}
+                    setSelectedCosts={personaFilters.setSelectedCosts}
+                    selectedTypes={personaFilters.selectedTypes}
+                    setSelectedTypes={personaFilters.setSelectedTypes}
+                    selectedSubtypes={personaFilters.selectedSubtypes}
+                    setSelectedSubtypes={personaFilters.setSelectedSubtypes}
+                    selectedKeywords={personaFilters.selectedKeywords}
+                    setSelectedKeywords={personaFilters.setSelectedKeywords}
+                    selectedAtks={personaFilters.selectedAtks}
+                    setSelectedAtks={personaFilters.setSelectedAtks}
+                    selectedHps={personaFilters.selectedHps}
+                    setSelectedHps={personaFilters.setSelectedHps}
+                    clearFilters={personaFilters.clearFilters}
+                  />
+                  {renderEditGrid("persona")}
+                </>
+              ) : (
+                renderSelectedList("persona")
+              )}
+            </div>
+          </section>
+
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <h3>
+                Deck Cards
+                <span className={styles.sectionCount}>
+                  {getTotalInMap(deckSelectionMap)}/{sectionLimits.deck}
+                </span>
+              </h3>
+              <div>
+                <button
+                  className={styles.editButton}
+                  onClick={() => toggleEdit("deck")}
+                >
+                  {editing.deck ? "Done" : "Edit"}
+                </button>
               </div>
+            </div>
 
-              <div className={styles.sectionBody}>
-                {editing.persona ? (
-                  <>
-                    <CardFilters
-                      options={personaOptions}
-                      searchText={personaFilters.searchText}
-                      setSearchText={personaFilters.setSearchText}
-                      selectedCosts={personaFilters.selectedCosts}
-                      setSelectedCosts={personaFilters.setSelectedCosts}
-                      selectedTypes={personaFilters.selectedTypes}
-                      setSelectedTypes={personaFilters.setSelectedTypes}
-                      selectedSubtypes={personaFilters.selectedSubtypes}
-                      setSelectedSubtypes={personaFilters.setSelectedSubtypes}
-                      selectedKeywords={personaFilters.selectedKeywords}
-                      setSelectedKeywords={personaFilters.setSelectedKeywords}
-                      selectedAtks={personaFilters.selectedAtks}
-                      setSelectedAtks={personaFilters.setSelectedAtks}
-                      selectedHps={personaFilters.selectedHps}
-                      setSelectedHps={personaFilters.setSelectedHps}
-                      clearFilters={personaFilters.clearFilters}
-                    />
-                    {renderEditGrid("persona")}
-                  </>
-                ) : (
-                  renderSelectedList("persona")
-                )}
-              </div>
-            </section>
+            <div className={styles.sectionBody}>
+              {editing.deck ? (
+                <>
+                  <CardFilters
+                    options={deckOptions}
+                    searchText={deckFilters.searchText}
+                    setSearchText={deckFilters.setSearchText}
+                    selectedCosts={deckFilters.selectedCosts}
+                    setSelectedCosts={deckFilters.setSelectedCosts}
+                    selectedTypes={deckFilters.selectedTypes}
+                    setSelectedTypes={deckFilters.setSelectedTypes}
+                    selectedSubtypes={deckFilters.selectedSubtypes}
+                    setSelectedSubtypes={deckFilters.setSelectedSubtypes}
+                    selectedKeywords={deckFilters.selectedKeywords}
+                    setSelectedKeywords={deckFilters.setSelectedKeywords}
+                    selectedAtks={deckFilters.selectedAtks}
+                    setSelectedAtks={deckFilters.setSelectedAtks}
+                    selectedHps={deckFilters.selectedHps}
+                    setSelectedHps={deckFilters.setSelectedHps}
+                    clearFilters={deckFilters.clearFilters}
+                  />
 
-            <section className={styles.section}>
-              <div className={styles.sectionHeader}>
-                <h3>
-                  Deck Cards
-                  <span className={styles.sectionCount}>
-                    {getTotalInMap(deckSelectionMap)}/{sectionLimits.deck}
-                  </span>
-                </h3>
-                <div>
-                  <button
-                    className={styles.editButton}
-                    onClick={() => toggleEdit("deck")}
-                  >
-                    {editing.deck ? "Done" : "Edit"}
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.sectionBody}>
-                {editing.deck ? (
-                  <>
-                    <CardFilters
-                      options={deckOptions}
-                      searchText={deckFilters.searchText}
-                      setSearchText={deckFilters.setSearchText}
-                      selectedCosts={deckFilters.selectedCosts}
-                      setSelectedCosts={deckFilters.setSelectedCosts}
-                      selectedTypes={deckFilters.selectedTypes}
-                      setSelectedTypes={deckFilters.setSelectedTypes}
-                      selectedSubtypes={deckFilters.selectedSubtypes}
-                      setSelectedSubtypes={deckFilters.setSelectedSubtypes}
-                      selectedKeywords={deckFilters.selectedKeywords}
-                      setSelectedKeywords={deckFilters.setSelectedKeywords}
-                      selectedAtks={deckFilters.selectedAtks}
-                      setSelectedAtks={deckFilters.setSelectedAtks}
-                      selectedHps={deckFilters.selectedHps}
-                      setSelectedHps={deckFilters.setSelectedHps}
-                      clearFilters={deckFilters.clearFilters}
-                    />
-
-                    {renderEditGrid("deck")}
-                  </>
-                ) : (
-                  renderSelectedList("deck")
-                )}
-              </div>
-            </section>
-          </>
-        )}
+                  {renderEditGrid("deck")}
+                </>
+              ) : (
+                renderSelectedList("deck")
+              )}
+            </div>
+          </section>
+        </>
       </div>
     </div>
   );
