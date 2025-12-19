@@ -51,3 +51,12 @@ button {
     linear-gradient(135deg, #cdb3ff 0%, #7b72f1 60%, #594fe0 100%),
     repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0 6px, transparent 6px 12px);
 }
+
+/* Prevent image dragging and selection globally */
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}

@@ -9,6 +9,7 @@ dist/
 dist-ssr/
 build/
 release-builds/
+.electron-data/
 
 # Vite / dev
 .vite/

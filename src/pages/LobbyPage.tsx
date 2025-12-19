@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./LobbyPage.module.scss";
 import { gameConnection } from "../services/gameConnection";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import { usePlayerRole } from "../hooks/usePlayerRole";
 import { useSyncPlayerName } from "../hooks/useSyncPlayerName";
 import FactionSelectionModal from "../components/FactionSelectionModal";
 import DeckSelectionModal from "../components/DeckSelectionModal";
+import { getDeck } from "../services/deckService";
 
 export default function LobbyPage() {
   const navigate = useNavigate();
@@ -21,6 +22,15 @@ export default function LobbyPage() {
   const { state, myId } = useLobbyConnection();
   const meRole = usePlayerRole(state, myId);
   useSyncPlayerName(meRole, state);
+
+  // Navigate to game when started
+  useEffect(() => {
+    console.log("[LobbyPage] state.started changed:", state.started);
+    if (state.started) {
+      console.log("[LobbyPage] Navigating to /game");
+      navigate("/game");
+    }
+  }, [state.started, navigate]);
 
   // Handlers
   function leave() {
@@ -56,8 +66,12 @@ export default function LobbyPage() {
           )}
         </div>
         <div className={styles.actions}>
-          {canStart && (
-            <button className={styles.startButton} onClick={start}>
+          {meRole === "host" && (
+            <button
+              className={styles.startButton}
+              onClick={start}
+              disabled={!canStart}
+            >
               Start Match
             </button>
           )}
@@ -96,6 +110,7 @@ export default function LobbyPage() {
           onSelect={(faction) => {
             setSelectedFaction(faction);
             setShowFactionSelection(false);
+            gameConnection.setFaction(faction);
           }}
           onClose={() => {
             setShowFactionSelection(false);
@@ -108,7 +123,18 @@ export default function LobbyPage() {
         <DeckSelectionModal
           faction={selectedFaction}
           onSelectDeck={(deckId) => {
-            gameConnection.setDeck(deckId);
+            const deck = getDeck(deckId);
+            if (deck) {
+              gameConnection.setDeckWithInfo(
+                deckId,
+                deck.protagonist ?? null,
+                deck.name ?? null,
+                deck.persona ?? null,
+                deck.deck ?? null
+              );
+            } else {
+              gameConnection.setDeck(deckId);
+            }
             setSelectedFaction(null);
             setSelectingFor(null);
           }}

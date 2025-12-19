@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 import localtunnel from 'localtunnel';
+import net from 'net';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,6 +14,7 @@ const __dirname = path.dirname(__filename);
 let mainWindow;
 let httpServer;
 let io;
+let isServerInstance = false; // Track if this instance runs the server
 
 // Game lobby state
 const lobby = {
@@ -45,7 +47,9 @@ function buildState() {
 }
 
 function emitState() {
-  io?.emit('lobby:state', buildState());
+  const state = buildState();
+  console.log('[emitState] Broadcasting state:', JSON.stringify(state));
+  io?.emit('lobby:state', state);
 }
 
 function startServer() {
@@ -99,6 +103,12 @@ function startServer() {
           console.log('Localtunnel created:', tunnel.url);
           console.log('Join code:', lobby.code);
           
+          // Handle tunnel errors
+          tunnel.on('error', (err) => {
+            console.error('Localtunnel error:', err);
+            // Don't crash, just log the error
+          });
+          
           // Register the code in the registry
           try {
             await fetch('https://astralia-card-game-registry.onrender.com/api/code', {
@@ -113,6 +123,8 @@ function startServer() {
         } catch (err) {
           console.error('Localtunnel failed:', err);
           socket.emit('lobby:error', 'Failed to create public tunnel');
+          // Clear host state since tunnel creation failed
+          lobby.host = null;
           return;
         }
       } else {
@@ -165,11 +177,53 @@ function startServer() {
       emitState();
     });
 
-    socket.on('lobby:setDeck', (deckId) => {
+    socket.on('lobby:setDeck', (data) => {
       const who = lobby.host?.socketId === socket.id ? lobby.host : (lobby.guest?.socketId === socket.id ? lobby.guest : null);
       if (!who) return;
-      who.deckId = deckId || null;
+      
+      // Support both old format (string) and new format (object with metadata)
+      if (typeof data === 'string') {
+        who.deckId = data || null;
+      } else if (data && typeof data === 'object') {
+        who.deckId = data.deckId || null;
+        who.protagonistId = data.protagonistId || null;
+        who.deckName = data.deckName || null;
+        who.personaCards = data.personaCards || null;
+        who.mainDeckCards = data.mainDeckCards || null;
+      } else {
+        who.deckId = null;
+      }
+      
       emitState();
+    });
+
+    socket.on('lobby:setHand', (handCards) => {
+      const who = lobby.host?.socketId === socket.id ? lobby.host : (lobby.guest?.socketId === socket.id ? lobby.guest : null);
+      if (!who) return;
+      who.handCards = handCards || [];
+      emitState();
+    });
+
+    socket.on('lobby:setDeckCards', (deckCards) => {
+      const who = lobby.host?.socketId === socket.id ? lobby.host : (lobby.guest?.socketId === socket.id ? lobby.guest : null);
+      if (!who) return;
+      who.deckCards = deckCards || [];
+      emitState();
+    });
+
+    socket.on('lobby:setPersonaCards', (personaCards) => {
+      const who = lobby.host?.socketId === socket.id ? lobby.host : (lobby.guest?.socketId === socket.id ? lobby.guest : null);
+      if (!who) return;
+      who.personaCards = personaCards || [];
+      emitState();
+    });
+
+    socket.on('lobby:shuffle', () => {
+      // Notify the opponent about the shuffle animation
+      const opponent = lobby.host?.socketId === socket.id ? lobby.guest : lobby.host;
+      if (opponent?.socketId) {
+        io.to(opponent.socketId).emit('lobby:opponentShuffle');
+      }
     });
 
     socket.on('lobby:leave', async () => {
@@ -191,9 +245,17 @@ function startServer() {
     });
 
     socket.on('lobby:startRequest', () => {
-      if (lobby.host?.socketId !== socket.id) return;
-      if (!lobby.host?.deckId || !lobby.guest?.deckId) return;
+      console.log('[StartRequest] Received from', socket.id, '| host:', lobby.host?.socketId, '| guest:', lobby.guest?.socketId);
+      if (lobby.host?.socketId !== socket.id) {
+        console.log('[StartRequest] Rejected: not host');
+        return;
+      }
+      if (!lobby.host?.deckId || !lobby.guest?.deckId) {
+        console.log('[StartRequest] Rejected: missing decks', { hostDeck: lobby.host?.deckId, guestDeck: lobby.guest?.deckId });
+        return;
+      }
       lobby.started = true;
+      console.log('[StartRequest] Game started! Emitting state...');
       emitState();
       io.emit('lobby:started', { hostDeckId: lobby.host.deckId, guestDeckId: lobby.guest.deckId });
     });
@@ -315,8 +377,8 @@ function createWindow() {
 async function cleanup() {
   console.log('[Cleanup] Starting cleanup...');
   
-  // Unregister code from registry
-  if (lobby.code) {
+  // Unregister code from registry (only if this is the server instance)
+  if (isServerInstance && lobby.code) {
     try {
       console.log('[Cleanup] Unregistering code:', lobby.code);
       await fetch(`https://astralia-card-game-registry.onrender.com/api/code/${lobby.code}`, {
@@ -328,8 +390,8 @@ async function cleanup() {
     }
   }
   
-  // Close localtunnel
-  if (lobby.tunnel) {
+  // Close localtunnel (only if this is the server instance)
+  if (isServerInstance && lobby.tunnel) {
     try {
       console.log('[Cleanup] Closing localtunnel...');
       await lobby.tunnel.close();
@@ -339,19 +401,52 @@ async function cleanup() {
     }
   }
   
-  // Close HTTP server
-  if (httpServer) {
+  // Close HTTP server (only if this is the server instance)
+  if (isServerInstance && httpServer) {
     httpServer.close();
     console.log('[Cleanup] HTTP server closed');
   }
 }
 
-// Start the server first
-startServer();
+// Check if port is in use
+function isPortInUse(port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(true);
+      } else {
+        resolve(false);
+      }
+    });
+    
+    server.once('listening', () => {
+      server.close();
+      resolve(false);
+    });
+    
+    server.listen(port);
+  });
+}
 
 // Then handle app lifecycle
-app.on('ready', () => {
+app.on('ready', async () => {
   console.log('[Electron] App ready event');
+  
+  // Check if we should start the server (primary instance only)
+  const PORT = 3000;
+  const portInUse = await isPortInUse(PORT);
+  
+  if (!portInUse) {
+    console.log('[Electron] Starting server as primary instance');
+    isServerInstance = true;
+    startServer();
+  } else {
+    console.log('[Electron] Server already running, connecting as secondary instance');
+    isServerInstance = false;
+  }
+  
   createWindow();
 });
 

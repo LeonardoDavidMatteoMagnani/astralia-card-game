@@ -5,18 +5,16 @@ import { gameConnection, type LobbyState } from "../services/gameConnection";
  * Manages connection to the lobby server and lobby state
  */
 export function useLobbyConnection() {
-  const [state, setState] = useState<LobbyState>({
-    host: null,
-    guest: null,
-    started: false,
-  });
+  const [state, setState] = useState<LobbyState>(() => gameConnection.getCurrentState());
   const [myId, setMyId] = useState<string | null>(gameConnection.getSocketId());
 
   useEffect(() => {
     gameConnection.connect();
     setMyId(gameConnection.getSocketId());
+    setState(gameConnection.getCurrentState()); // Get current state immediately
 
     const off = gameConnection.onState((s) => {
+      console.log('[useLobbyConnection] Received state update:', JSON.stringify(s, null, 2));
       setState(s);
       const sid = gameConnection.getSocketId();
       if (sid) setMyId((prev) => prev ?? sid);

@@ -1,0 +1,40 @@
+.content {
+  min-width: 400px;
+
+  h2 {
+    color: #d4af37;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+}
+
+.cardGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 20px 0;
+  justify-content: center;
+}
+
+.personaCard {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  display: inline-block;
+  width: fit-content;
+
+  &:hover {
+    transform: translateY(-5px);
+    border-color: #d4af37;
+  }
+
+  &.viewOnly {
+    cursor: default;
+
+    &:hover {
+      transform: none;
+      border-color: transparent;
+    }
+  }
+}

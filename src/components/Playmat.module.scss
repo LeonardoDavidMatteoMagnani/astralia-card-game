@@ -1,0 +1,280 @@
+.playmatRoot {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: #0a0e27;
+  display: flex;
+  flex-direction: column;
+}
+
+.opponentSide,
+.playerSide {
+  position: relative;
+  width: 100%;
+  height: calc(50% - 2px);
+  overflow: hidden;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.opponentSide {
+  padding-top: 60px;
+}
+
+.playerSide {
+  padding-bottom: 60px;
+}
+
+.playmatImageTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.4;
+  transform: scaleY(-1);
+  z-index: 0;
+}
+
+.playmatImageBottom {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.4;
+  z-index: 0;
+}
+
+/* Center Separator */
+.centerSeparator {
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    #d4af37 20%, 
+    #d4af37 80%, 
+    transparent 100%);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  z-index: 30;
+}
+
+/* Left Zones Container */
+.leftZones {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 10;
+  width: 150px;
+}
+
+.oblivionZone,
+.personaDeckZone,
+.graveyardZone,
+.mainDeckZone {
+  border: 2px solid #d4af37;
+  border-radius: 8px;
+  background: rgba(10, 14, 39, 0.8);
+  padding: 8px;
+  min-height: 100px;
+  position: relative;
+}
+
+.personaDeckZone,
+.mainDeckZone {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.zoneLabel {
+  color: #d4af37;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.cardStack {
+  position: relative;
+  flex: 1;
+  min-height: 150px;
+}
+
+.stackedCard {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+}
+
+.personaCard {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+/* Battle Grid - 2x3 grid */
+.battleGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 124px);
+  grid-template-rows: repeat(2, 172px);
+  gap: 15px;
+  z-index: 10;
+}
+
+.battleSlot {
+  border: 2px dashed #d4af37;
+  border-radius: 12px;
+  background: rgba(10, 14, 39, 0.6);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.battleSlot:hover {
+  opacity: 1;
+  background: rgba(212, 175, 55, 0.1);
+  border-style: solid;
+}
+
+.protagonistSlot {
+  border: 0px solid #d4af37;
+  border-radius: 8px;
+  background: rgba(10, 14, 39, 0.8);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Right Zones Container */
+.rightZones {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 10;
+  width: 150px;
+}
+
+.deckBack {
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.6));
+  margin-top: 8px;
+}
+
+/* Player Names */
+.playerInfo {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.opponentName {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #d4af37;
+  font-size: 20px;
+  font-weight: 700;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+  background: rgba(10, 14, 39, 0.7);
+  padding: 5px 20px;
+  border-radius: 8px;
+  border: 1px solid #d4af37;
+}
+
+.playerName {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  color: #d4af37;
+  font-size: 20px;
+  font-weight: 700;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+  background: rgba(10, 14, 39, 0.7);
+  padding: 5px 20px;
+  border-radius: 8px;
+  border: 1px solid #d4af37;
+}
+
+/* Hand Zones */
+.opponentHandZone,
+.playerHandZone {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1000px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 100;
+}
+
+.opponentHandZone {
+  top: -60px;
+  transform: translateX(-50%) rotate(180deg);
+}
+
+.playerHandZone {
+  bottom: -60px;
+}
+
+.handCards {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.handCard {
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-80px);
+    z-index: 200 !important;
+  }
+}
+
+.opponentHandZone .handCard {
+  &:hover {
+    transform: translateY(-80px);
+    z-index: 200 !important;
+  }
+}
+
+/* Shuffle Animation */
+@keyframes shuffle {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-10px) rotate(-5deg);
+  }
+  50% {
+    transform: translateX(10px) rotate(5deg);
+  }
+  75% {
+    transform: translateX(-10px) rotate(-5deg);
+  }
+}
+
+.cardStack.shuffling {
+  animation: shuffle 0.8s ease-in-out;
+}

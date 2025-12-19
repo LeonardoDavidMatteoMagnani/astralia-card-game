@@ -5,6 +5,12 @@ export interface LobbyPlayerState {
   name: string;
   deckId: string | null;
   faction: string | null;
+  protagonistId?: string | null;
+  deckName?: string | null;
+  personaCards?: string[] | null;
+  mainDeckCards?: Array<{ id: string; qty: number }> | null;
+  handCards?: string[] | null;
+  deckCards?: string[] | null;
 }
 
 export interface LobbyState {
@@ -25,6 +31,7 @@ class GameConnection {
   private errorListeners: Set<ErrorListener> = new Set();
   private registryUrl = 'https://astralia-card-game-registry.onrender.com'; // simple registry service
   private hostEmitted = false; // Prevent duplicate host emissions in same session
+  private currentState: LobbyState = { host: null, guest: null, started: false };
 
   connect(joinCode?: string, serverUrl?: string) {
     if (this.socket) return;
@@ -46,15 +53,19 @@ class GameConnection {
     
     this.socket = io(url ?? '/', { autoConnect: true, withCredentials: false });
     this.socket.on('connect', () => {
+      console.log('[GameConnection] Connected to server');
       this.connectListeners.forEach((l) => l());
     });
     this.socket.on('lobby:state', (state: LobbyState) => {
+      console.log('[GameConnection] Received lobby:state event:', state);
+      this.currentState = state;
       this.listeners.forEach((l) => l(state));
     });
     this.socket.on('lobby:joinError', (error: string) => {
       this.errorListeners.forEach((l) => l(error));
     });
     this.socket.on('disconnect', () => {
+      console.log('[GameConnection] Disconnected from server');
       this.disconnectListeners.forEach((l) => l());
     });
   }
@@ -71,6 +82,10 @@ class GameConnection {
 
   getSocketId(): string | null {
     return this.socket?.id ?? null;
+  }
+
+  getCurrentState(): LobbyState {
+    return this.currentState;
   }
 
   isConnected(): boolean {
@@ -138,6 +153,21 @@ class GameConnection {
   }
   setDeck(deckId: string | null) {
     this.socket?.emit('lobby:setDeck', deckId);
+  }
+  setDeckWithInfo(deckId: string | null, protagonistId: string | null, deckName: string | null, personaCards: string[] | null, mainDeckCards: Array<{ id: string; qty: number }> | null) {
+    this.socket?.emit('lobby:setDeck', { deckId, protagonistId, deckName, personaCards, mainDeckCards });
+  }
+  setHand(handCards: string[]) {
+    this.socket?.emit('lobby:setHand', handCards);
+  }
+  setDeckCards(deckCards: string[]) {
+    this.socket?.emit('lobby:setDeckCards', deckCards);
+  }
+  setPersonaCards(personaCards: string[]) {
+    this.socket?.emit('lobby:setPersonaCards', personaCards);
+  }
+  triggerShuffle() {
+    this.socket?.emit('lobby:shuffle');
   }
   leave() {
     this.socket?.emit('lobby:leave');

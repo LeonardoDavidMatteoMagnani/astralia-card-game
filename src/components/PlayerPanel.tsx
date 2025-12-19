@@ -45,24 +45,28 @@ export default function PlayerPanel({
   joinCode = "",
 }: PlayerPanelProps) {
   const [proCard, setProCard] = useState<Card | null>(null);
-  const deck = player?.deckId ? getDeck(player.deckId) : null;
-  const proCardId = deck?.protagonist || null;
+
+  // For current player, load from localStorage; for opponent, use data from server
+  const deck =
+    isCurrentPlayer && player?.deckId ? getDeck(player.deckId) : null;
+  const proCardId = player?.protagonistId || deck?.protagonist || null;
+  const deckName = player?.deckName || deck?.name || null;
 
   useEffect(() => {
-    if (proCardId && deck) {
+    if (proCardId && player?.faction) {
       getCardFaces(proCardId)
         .then((faces) => {
           setProCard(
             faces.front ||
               faces.back ||
-              makePlaceholder(proCardId, deck.faction)
+              makePlaceholder(proCardId, player.faction!)
           );
         })
-        .catch(() => setProCard(makePlaceholder(proCardId, deck.faction)));
+        .catch(() => setProCard(makePlaceholder(proCardId, player.faction!)));
     } else {
       setProCard(null);
     }
-  }, [proCardId, deck]);
+  }, [proCardId, player?.faction]);
 
   if (!player) {
     return (
@@ -108,7 +112,7 @@ export default function PlayerPanel({
       </div>
 
       <div className={styles.deckInfo}>
-        {deck ? deck.name : "No deck selected"}
+        {deckName || (deck ? deck.name : "No deck selected")}
       </div>
     </div>
   );
