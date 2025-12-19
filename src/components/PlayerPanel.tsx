@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getDeck } from "../services/deckService";
 import { getCardFaces } from "../services/cardDataService";
-import CardDisplay from "./CardDisplay";
+import { getCardImagePath } from "../services/cardImageService";
 import type { Card } from "../types/Card";
 import type { LobbyPlayerState } from "../services/gameConnection";
 import styles from "./PlayerPanel.module.scss";
@@ -97,7 +97,11 @@ export default function PlayerPanel({
 
       <div className={styles.cardWrapper}>
         {proCard ? (
-          <CardDisplay card={proCard} />
+          <img
+            src={getCardImagePath(proCard)}
+            alt={proCard.name}
+            className={styles.protagonistImage}
+          />
         ) : (
           <div className={styles.noCard}>No protagonist</div>
         )}
